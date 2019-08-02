@@ -1,9 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 
-	"github.com/joja5627/web-scrapper/internal/scrape"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/globalsign/mgo"
+
+	"github.com/joja5627/scraper/internal/scrape"
 )
 
 var (
@@ -13,11 +19,35 @@ var (
 func main() {
 	var urls []string
 
+	session, connectionERR := mgo.Dial("mongodb://localhost:27017")
+
+	if connectionERR != nil {
+		fmt.Println("connection error", connectionERR)
+	}
+	repo, repoERR := scrape.NewMongoRepository(session)
+	if repoERR != nil {
+		fmt.Println("repo error", repoERR)
+	}
+	service := scrape.NewScrapeService(repo)
+
 	for _, stateCode := range stateCodes {
 		fullURL := fmt.Sprintf("https://%s.craigslist.org/search/sof?employment_type=3", stateCode)
 		urls = append(urls, fullURL)
 	}
+	r := gin.Default()
+	r.Use(cors.Default())
 
-	links := scrape.ScrapeCL(urls)
-	fmt.Println(len(links))
+	r.GET("/scrape", func(c *gin.Context) {
+
+		links := service.ScrapeCL(urls)
+
+		jsonLinks, err := json.Marshal(links)
+		if err != nil {
+			c.JSON(500, err)
+		} else {
+			c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "links": string(jsonLinks)})
+		}
+
+	})
+	r.Run() // listen and serve on 0.0.0.0:8080
 }

@@ -1,6 +1,9 @@
 package async
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 // NewClient creates a new client and sets its appropriate channels
 func NewClient(client *http.Client, bufferSize int) *Client {
@@ -24,10 +27,15 @@ type Client struct {
 // AsyncGet performs a Get then returns
 // the resp/error to the appropriate channel
 func (c *Client) AsyncGet(url string) {
-	resp, err := c.Get(url)
-	if err != nil {
-		c.Err <- err
-		return
+
+	for true {
+		resp, err := c.Get(url)
+		if err != nil {
+			fmt.Printf("Error received: %s\n", err)
+		} else {
+			c.Resp <- resp
+			return
+		}
 	}
-	c.Resp <- resp
+
 }
