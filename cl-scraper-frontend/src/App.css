@@ -1,0 +1,72 @@
+
+.form-control {
+  font-size: 2rem;
+  padding: 25px 15px;
+}
+#app {
+  padding: 100px;
+  font-family: 'Avenir LT Std', sans-serif;
+}
+
+.App-logo {
+  /* animation: App-logo-spin infinite 20s linear; */
+  height: 180px;
+}
+
+.App-header {
+  /* background-color: #222; */
+  height: 150px;
+  padding: 20px;
+  /* color: white; */
+}
+
+.App-title {
+  font-size: 1.5em;
+}
+
+.App-intro {
+  font-size: large;
+}
+.btn-2 {
+	background: grey;
+	color: #fff;
+	box-shadow: 0 6px grey;
+	-webkit-transition: none;
+	-moz-transition: none;
+	transition: none;
+}
+
+/* Button 2a */
+.btn-2a {
+	border-radius: 0 0 5px 5px;
+}
+
+.btn-2a:hover {
+	box-shadow: 0 4px slategrey;
+	top: 2px;
+}
+
+.btn-2a:active {
+	box-shadow: 0 0 slategray;
+	top: 6px;
+}
+.btn{
+  border: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    /* background: none; */
+    cursor: pointer;
+    padding: 25px 80px;
+    display: inline-block;
+    margin: 15px 30px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    outline: none;
+    position: relative;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+    transition: all 0.3s;
+}
+

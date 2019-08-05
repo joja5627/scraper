@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta name="description" content="Smith & Gold Strategic Consulting">
+  <meta name="author" content="Joseph Jackson">
+  <meta property="og:title" content="Smith & Gold | Design + Development">
+  <link
+  rel="stylesheet"
+  href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+  integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+  crossorigin="anonymous"
+/>
+  <style>
+      @font-face {
+          font-family: 'brandon-grotesque';
+          src: url("../fonts/Brandon-Grotesque-bold-webfont.eot");
+          src: url("../fonts/Brandon-Grotesque-bold-webfontd41d.eot?#iefix") format("embedded-opentype"), url("../fonts/Brandon-Grotesque-bold-webfont.woff") format("woff"), url("../fonts/Brandon-Grotesque-bold-webfont.ttf") format("truetype"), url("../fonts/Brandon-Grotesque-bold-webfont.svg#brandon-grotesque-bold") format("svg");
+          font-weight: normal;
+          font-style: normal;
+      }
+
+      @font-face {
+          font-family: 'monosten-a';
+          src: url("../fonts/Monosten-A-webfont.eot");
+          src: url("../fonts/Monosten-A-webfontd41d.eot?#iefix") format("embedded-opentype"), url("../fonts/Monosten-A-webfont.woff2") format("woff2"), url("../fonts/Monosten-A-webfont.woff") format("woff"), url("../fonts/Monosten-A-webfont.ttf") format("truetype"), url("../fonts/Monosten-A-webfont.svg#monostena") format("svg");
+          font-weight: normal;
+          font-style: normal;
+      }
+
+      html,
+      body {
+          background-image: linear-gradient(to left bottom, #18161a, #2b2a2d, #3f3f41, #555556, #6c6c6c);
+          z-index: -1;
+          height: 100%;
+          margin: 0;
+          background-attachment: fixed;
+          background-repeat: no-repeat;
+
+
+      }
+
+      h1 {
+          margin-bottom: 0px !important;
+          margin: 0px !important;
+      }
+
+      html {
+          scroll-behavior: smooth;
+      }
+
+      ::selection {
+          color: #fcfcfc;
+          background: #cbb677;
+      }
+
+      .gold {
+          color: #cbb677;
+      }
+
+      .dark-grey {
+          color: #A4A4A4;
+      }
+
+      .dark-slate-grey {
+          color: #18161A;
+      }
+
+      .gainsboro {
+          color: #E4E4E4;
+      }
+
+      .p.gains-color {
+          color: #E4E4E4;
+      }
+
+      .dim-gray {
+          color: #6C6C6C
+      }
+
+      #logo {
+          float: right;
+          display: inline-block;
+      }
+
+      .gold-background {
+          background-color: #cbb677;
+      }
+
+      .dark-grey-background {
+          background-color: #A4A4A4;
+      }
+
+      .dark-slate-grey-background {
+          background-color: #18161A;
+      }
+
+      .gainsboro-background {
+          background-color: #E4E4E4;
+      }
+
+      .dim-gray-background {
+          background-color: #6C6C6C
+      }
+
+      .gainsborough-gradient-color {
+          background-color: linear-gradient(to right top, #e4e4e4, #abaaac, #757477, #444246, #18161a);
+      }
+
+      .gains-background {
+          background-image: linear-gradient(to right top, #e4e4e4, #d5d5d6, #c7c7c8, #b9b8ba, #abaaac);
+      }
+
+      .background-gradient {
+          background-image: linear-gradient(to right top, #acafb5, #83898c, #5f6565, #3e4240, #212220);
+      }
+
+      .gradient-color {
+          color: linear-gradient(to right top, #acafb5, #83898c, #5f6565, #3e4240, #212220);
+      }
+
+
+      .main-logo {
+          position: bottom;
+          padding: 30px 30px;
+
+      }
+
+      .main-logo h1 {
+          font-size: 26px;
+          text-transform: uppercase;
+          letter-spacing: 6px;
+          backface-visibility: hidden;
+          transition: all 1s ease;
+      }
+
+      .main-logo-3 {
+
+          padding: 30px 30px;
+      }
+
+      .main-logo-3 h1 {
+          font-size: 26px;
+          text-transform: uppercase;
+          letter-spacing: 6px;
+          backface-visibility: hidden;
+          transition: all 1s ease;
+      }
+
+      @media (min-width: 580px) {
+          .main-logo h1 {
+              letter-spacing: 12px;
+          }
+      }
+
+      .main-logo h2 {
+          margin-left: 4px;
+          font-size: 9px;
+          line-height: 2.3;
+          letter-spacing: 3px;
+          backface-visibility: hidden;
+          transition: all 1s ease;
+      }
+
+      @media (min-width: 580px) {
+          .main-logo h2 {
+              font-size: 13px;
+          }
+      }
+
+      .nav-begin {
+          position: absolute;
+          right: 0px;
+          top: 0px;
+      }
+
+      .intro-links {
+          margin-left: -6px;
+      }
+
+      .intro-links a {
+          display: inline-block;
+          position: relative;
+          margin: 0 10px;
+          font-size: 11px;
+          line-height: 20px;
+          letter-spacing: .5px;
+          text-align: center;
+          color: #fcfcfc;
+      }
+
+      .intro-links a::before {
+          content: '';
+          border-bottom: 1px solid #cbb677;
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          opacity: 0;
+          transform: scaleX(0);
+          transition: all .27s ease;
+      }
+
+      .intro-links a:hover::before {
+          opacity: 1;
+          transform: scaleX(1);
+      }
+
+
+
+      footer {
+          padding-top: 3rem;
+          padding-bottom: 3rem;
+      }
+
+      footer p {
+          margin-bottom: .25rem;
+      }
+
+      .box-shadow {
+          box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+      }
+
+      .jumbotron {
+          background-color: transparent !important;
+          margin-bottom: 0px !important;
+          border-radius: 0px !important;
+      }
+
+      .content {
+          padding: 16px;
+      }
+
+      .sticky {
+          position: fixed;
+          /* right: 400px; */
+          top: 0;
+          right: 30px;
+          transition: all 5s ease;
+
+          /* width: 100%; */
+      }
+
+      .sticky+.content {
+          padding-top: 60px;
+      }
+
+
+      .nav-start {
+          position: absolute;
+          bottom: 50px;
+          left: 50px;
+          z-index: 5;
+          transition: all 5s ease;
+
+      }
+
+      .img-layer {
+          z-index: 0;
+      }
+  </style>
+</head>
+  <body>
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+  
+
+<script>var Alert = ReactBootstrap.Alert;</script>
+</html>
