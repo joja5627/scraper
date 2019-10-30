@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
-import { Button } from 'semantic-ui-react'
-import { Progress } from "semantic-ui-react";
+import { Button, Container, Grid, Card, Progress, Form,Icon, Input, Select, TextArea } from 'semantic-ui-react'
 
 
 const ProgressBar = ({ uploadState, percentUploaded }) =>
@@ -59,7 +58,7 @@ class TodoListItem extends React.Component {
             <a href={`${this.props.item}`}> {this.props.item}</a>
           </span>
 
-          <button type="button" className="close" onClick={this.onClickClose}>&times;</button>
+          <Button onClick={this.onClickClose}>&times;</Button>
         </div>
       </li>
     );
@@ -86,26 +85,19 @@ class App extends Component {
     this.setState({ links: newLinks });
   }
   onEvent = (event) => {
-
     if (event.messageType === "listingPercentComplete") {
-      this.setState({ clListingScrapePercentage: event.payload })
-    } else if (event.messageType === "contactInfoPercentComplete") {
-      this.setState({ contactInfoScrapePercentage: event.payload })
-    } else if(event.messageType === "listingReqComplete"){
-      console.log(event)
-      // var flatLinks = JSON.parse(event.payload).flat();
-      // var uniqueLinks = Array.from(new Set(flatLinks));
-      this.setState({ links: JSON.parse(event.payload) })
+      this.setState({ clListingScrapePercentage: Math.round(event.payload) })
+    } else if (event.messageType === "listingURLs") {
+      this.setState({ links: this.state.links.concat(event.payload)})
     }
   }
-
   getLinks = () => {
     const socket = new WebSocket('ws://localhost:8080/scrape')
     socket.onopen = () => {
       console.log("open")
     }
     socket.onmessage = e => {
-      
+
       this.onEvent(JSON.parse(e.data))
     }
     socket.onclose = () => {
@@ -165,50 +157,55 @@ class App extends Component {
 
   render() {
     const { links } = this.state
-    var todoItems = [];
-    todoItems.push({ index: 1, value: "learn react", done: false });
-    todoItems.push({ index: 2, value: "Go shopping", done: true });
-    todoItems.push({ index: 3, value: "buy flowers", done: true });
-    console.log()
+
     return (
       <div className="App">
+        <Container textAlign='center'>
+          <h1 className="ui header fontWeight100">Craigslist Web Scraper</h1>
+          {this.state.clListingScrapePercentage && <ProgressBar uploadState={"uploading"} percentUploaded={this.state.clListingScrapePercentage} />}
 
-        <div className="container h-100">
-          <div style={progressBarStyle}>
-            <div className="row">
-              <h2> Parsing Steps </h2>
-              <div className="row">
+          <Grid columns={3} divided>
+            <Grid.Row>
+              <Grid.Column>
+                <Card>
+                  <Form>
+                    <Card.Content>
+                      <Card.Header>CL input parameters</Card.Header>
+                      <Card.Meta>
+                        <Form.Group widths='equal'>
+                        </Form.Group>
+                      </Card.Meta>
+                      <Card.Description>
+                      <Button.Group>
+                      <Button onClick={this.getLinks} icon>
+                        <Icon name='play' />
+                      </Button>
+                      <Button icon>
+                        <Icon name='stop' />
+                      </Button>
+                      <Button icon>
+                        <Icon name='redo' />
+                      </Button>
+                     
+                    </Button.Group>
+                    
+                  </Card.Description>
+                    </Card.Content>
+                    <Card.Content extra>
+                      <input type="text" onChange={this.onInputChange} name="filter-field" placeholder="filter results" />
+                    </Card.Content>
+                  </Form>
+                </Card>
+              </Grid.Column>
+              <Grid.Column>
+              {links && <TodoList items={this.filterList(this.state.links)} removeItem={this.removeItem} />}
+              </Grid.Column>
+              <Grid.Column>
+              </Grid.Column>
+            </Grid.Row>
+          </Grid>
+        </Container>
 
-                <h2>Listing Scrape Progress </h2>
-                <div className="margin-left-30 padding-10">
-                  {this.state.clListingScrapePercentage && <ProgressBar uploadState={"uploading"} percentUploaded={this.state.clListingScrapePercentage} />}
-                </div>
-
-              </div>
-              <div className="row">
-                <h2>Contact Info Scrape Progress</h2>
-                <div className="margin-left-30 padding-10">
-                  {this.state.contactInfoScrapePercentage && <ProgressBar uploadState={"uploading"} percentUploaded={this.state.contactInfoScrapePercentage} />}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="row">
-            <div className="col">
-              <input type="text" onChange={this.onInputChange} name="filter-field" placeholder="filter results" />
-
-              <div className="row">
-              
-                <button className="ui fade animated button" onClick={this.getLinks}>
-                  <div className="visible content">scrape cl</div>
-                  <div className="hidden content">scraping</div>
-                </button>
-                {links && <TodoList items={this.filterList(this.state.links)} removeItem={this.removeItem} />}
-              </div>
-            </div>
-          </div>
-        </div>
 
 
       </div>
