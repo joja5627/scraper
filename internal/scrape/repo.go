@@ -6,12 +6,11 @@ import (
 	"github.com/globalsign/mgo"
 )
 
-
 //Repo comments are meaningless
 type Repo interface {
 	// FindAll() ([]*User, error)
 	// FindByUsername(username string) (*User, error)
-	Add(scrape *Scrape) error
+	Add(listing *Listing) error
 	// Remove(username string) error
 }
 
@@ -61,14 +60,11 @@ func NewMongoRepository(session *mgo.Session) (*MongoRepository, error) {
 // }
 
 // Add adds an user to the repository
-func (r *MongoRepository) Add(scrape *Scrape) error {
+func (r *MongoRepository) Add(listing *Listing) error {
 	session, coll := r.getSession()
 	defer session.Close()
-	e := Scrape{
-		Links: "first event",
-		Date:  time.Now(),
-	}
-	coll.Insert(e)
+	listing.Date = time.Now()
+	coll.Insert(listing)
 
 	// _, err := coll.Upsert(bson.M{"username": user.Username}, user)
 	// if err != nil {
@@ -78,6 +74,12 @@ func (r *MongoRepository) Add(scrape *Scrape) error {
 
 	// log.WithField("username", user.Username).Debug("User added")
 	return nil
+}
+func (r *MongoRepository) getSession() (*mgo.Session, *mgo.Collection) {
+	session := r.session.Copy()
+	coll := session.DB("scrape_db").C("scrape_collection")
+
+	return session, coll
 }
 
 // Remove an user from the repository
@@ -98,9 +100,10 @@ func (r *MongoRepository) Add(scrape *Scrape) error {
 // 	return nil
 // }
 
-func (r *MongoRepository) getSession() (*mgo.Session, *mgo.Collection) {
-	session := r.session.Copy()
-	coll := session.DB("scrape_db").C("scrape_collection")
-
-	return session, coll
+func (r *MongoRepository) GetAll()  []map[string]string {
+	var listings []map[string]string // see bson.M
+	session, coll := r.getSession()
+	coll.Find(nil).All(&listings)
+	defer session.Close()
+	return listings
 }

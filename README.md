@@ -1,7 +1,7 @@
 # old automation
 
 ## https://github.com/topics/hexagonal-architecture?l=go
-
+# https://awesome-go.com/
 ## add modules
 go mod init github path
 

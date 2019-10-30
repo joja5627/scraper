@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-type UserHandler interface{
+type UserHandler interface {
 	CreateAccount(w http.ResponseWriter, r *http.Request)
 	GetToken(w http.ResponseWriter, r *http.Request)
 	//TODO Refresh Token
@@ -22,10 +22,10 @@ func NewUserHandler(service UserService) UserHandler {
 	}
 }
 
-func (h *userHandler) CreateAccount(w http.ResponseWriter, r *http.Request){
+func (h *userHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	var account Account
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&account); err != nil{
+	if err := decoder.Decode(&account); err != nil {
 		logrus.Error("Unable to decode account")
 		http.Error(w, "Bad format for account", http.StatusBadRequest)
 		return
@@ -45,12 +45,12 @@ func (h *userHandler) CreateAccount(w http.ResponseWriter, r *http.Request){
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	if _, err = w.Write(response); err != nil{
+	if _, err = w.Write(response); err != nil {
 		logrus.WithField("error", err).Error("Error writing response")
 	}
 }
 
-func (h *userHandler) GetToken(w http.ResponseWriter, r *http.Request){
+func (h *userHandler) GetToken(w http.ResponseWriter, r *http.Request) {
 	username, password, _ := r.BasicAuth()
 	if username == "" || password == "" {
 		http.Error(w, "No credentials provided", http.StatusUnauthorized)
@@ -58,9 +58,9 @@ func (h *userHandler) GetToken(w http.ResponseWriter, r *http.Request){
 	}
 
 	login, err := h.service.Login(username, password)
-	if err != nil{
+	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"error": err,
+			"error":    err,
 			"username": username,
 		}).Error("Error generating token")
 		http.Error(w, "Invalid login", http.StatusUnauthorized)
@@ -76,7 +76,7 @@ func (h *userHandler) GetToken(w http.ResponseWriter, r *http.Request){
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write(response); err != nil{
+	if _, err = w.Write(response); err != nil {
 		logrus.WithField("error", err).Error("Error writing response")
 	}
 }

@@ -35,7 +35,7 @@ func Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid  {
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			userId := claims["sub"].(string)
 			context.Set(r, "id", userId)
 			context.Set(r, "authType", claims["type"].(string))
@@ -47,5 +47,3 @@ func Authenticate(next http.Handler) http.Handler {
 		}
 	})
 }
-
-

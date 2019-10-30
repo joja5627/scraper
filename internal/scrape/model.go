@@ -1,14 +1,25 @@
 package scrape
 
 import (
-	"time"
-
 	"github.com/globalsign/mgo/bson"
+	"time"
 )
 
-//Scrape comment
-type Scrape struct {
+
+//Listing comment
+type Listing struct {
 	ID    bson.ObjectId "_id,omitempty"
-	Links string        `json:"links"`
+	ScrapeID bson.ObjectId "_id,omitempty"
 	Date  time.Time     `json:"created"`
+	StateOrg string `json:"stateOrg"`
+	ListingUrl string `json:"listingUrl"`
+	QueryUrl string `json:"queryUrl"`
+	ContactInfoUrl string `json:"contactInfoUrl"`
+	EmailResponse string `json:"emailResponse"`
+	Email string `json:"email"`
+}
+//SocketMessage
+type SocketMessage struct{
+	MessageType string `json:"messageType"`
+	Payload string `json:"payload"`
 }

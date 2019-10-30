@@ -51,7 +51,6 @@ func main() {
 
 }
 
-
 func redisConnect(url string, password string) *redis.Client {
 
 	logrus.WithField("connection", url).Info("Connecting to Redis DB")

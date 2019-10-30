@@ -28,14 +28,14 @@ type Client struct {
 // the resp/error to the appropriate channel
 func (c *Client) AsyncGet(url string) {
 
-	for true {
-		resp, err := c.Get(url)
-		if err != nil {
-			fmt.Printf("Error received: %s\n", err)
-		} else {
-			c.Resp <- resp
-			return
-		}
+	resp, err := c.Get(url)
+	if err != nil {
+		fmt.Printf("Error received: %s\n", err)
+		c.Err <- err
+		return
+	} else {
+		c.Resp <- resp
+		return
 	}
 
 }

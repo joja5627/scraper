@@ -17,7 +17,7 @@ type UserService interface {
 
 type userService struct {
 	repo UserRepo
-	key []byte
+	key  []byte
 }
 
 func NewUserService(repo UserRepo) UserService {
@@ -76,7 +76,7 @@ func (s *userService) Login(username, password string) (*Login, error) {
 	}
 	login := &Login{
 		Username: username,
-		Token: token,
+		Token:    token,
 	}
 	return login, nil
 }
