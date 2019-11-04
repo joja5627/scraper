@@ -1,4 +1,18 @@
-# old automation
+## terraform commands
+
+terraform init
+terraform apply -auto-approve
+
+go get github.com/aws/aws-lambda-go/lambda
+GOOS=linux go build -o faas main.go
+zip faas.zip faas
+aws s3 cp faas.zip s3://{my-artifact-s3-bucket-url}/
+
+curl -XPOST -d '{"woeid": "44418"}' https://{api-gw-base-url}/hello
+{"weather_state_name":"showers","min_temp":"2.54","max_temp":"14.475","title":"London","lattlong":"52.883560,-1.974060"}
+
+aws s3 cp index.html s3://{your-s3-website-bucket}/ --acl public-read
+terraform destroy -auto-approve
 
 ## https://github.com/topics/hexagonal-architecture?l=go
 # https://awesome-go.com/

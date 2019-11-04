@@ -13,9 +13,9 @@ resource "aws_lambda_function" "lambda_func" {
 
   role = "${aws_iam_role.lambda_exec.arn}"
 
-  environment={
-    variables = "${var.env_vars}"
-  }
+  # environment={
+  #   variables = "${var.env_vars}"
+  # }
 }
 
 # IAM role which dictates what other AWS services the Lambda function

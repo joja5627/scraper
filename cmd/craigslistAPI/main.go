@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
 	"github.com/gorilla/websocket"
 	"github.com/graphql-go/graphql"
 	"github.com/joja5627/scraper/internal/scrape"
