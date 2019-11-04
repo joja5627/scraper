@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"hex-example/internal/env"
+	"github.com/joja5627/scraper/internal/env"
 	"time"
 )
 

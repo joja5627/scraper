@@ -14,7 +14,7 @@ module "hex-api" {
 
   name = "gira"
   display_name = "Hex Example"
-  bucket = "hex-lambda"
+  bucket = "hex-lambda-1"
   app_version = "${var.app_version}"
   stage = "qa"
   env_vars = {

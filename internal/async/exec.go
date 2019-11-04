@@ -2,7 +2,7 @@ package async
 
 import (
 	"fmt"
-	"github.com/joja5627/scraper/internal/scrape"
+	"github.com/joja5627/github.com/joja5627/scraper/internal/scrape"
 	"io/ioutil"
 )
 

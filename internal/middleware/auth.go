@@ -5,7 +5,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/context"
 	"github.com/sirupsen/logrus"
-	"hex-example/internal/env"
+	"github.com/joja5627/scraper/internal/env"
 	"net/http"
 	"strings"
 )

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/go-redis/redis"
 	"github.com/sirupsen/logrus"
-	"hex-example/internal/ticket"
+	"github.com/joja5627/scraper/internal/ticket"
 )
 
 const ticketTable = "tickets"

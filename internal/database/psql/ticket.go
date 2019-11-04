@@ -2,7 +2,7 @@ package psql
 
 import (
 	"database/sql"
-	"hex-example/internal/ticket"
+	"github.com/joja5627/scraper/internal/ticket"
 	"log"
 
 	_ "github.com/lib/pq"

@@ -166,7 +166,7 @@ resource "aws_api_gateway_integration" "proxy_options_integration" {
 
   type = "MOCK"
 
-  request_templates {
+  request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
 }
@@ -179,7 +179,7 @@ resource "aws_api_gateway_integration" "proxy_options_root_integration" {
 
   type = "MOCK"
 
-  request_templates {
+  request_templates = {
     "application/json" = "{ \"statusCode\": 200 }"
   }
 }
