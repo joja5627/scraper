@@ -69,9 +69,11 @@ func main() {
 	// if repoERR != nil {
 	// 	fmt.Println("repo error", repoERR)
 	// }
-
-	r := gin.Default()
+	gin.SetMode(gin.DebugMode)
+	r := gin.New()
 	r.Use(cors.Default())
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
 
 	r.GET("/scrape", func(c *gin.Context) {
 

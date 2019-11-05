@@ -2,13 +2,14 @@ package scrape
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"github.com/gorilla/websocket"
 )
+// "log"
+// "net/http"
 
+// "github.com/PuerkitoBio/goquery"
 var (
 	selectors        = []string{".result-row .result-image", "#sortable-results > ul > li:nth-child(1) > p > a"}
 	emailTagSelector = "body > section > section > header > div.reply-button-row > button"
@@ -41,29 +42,53 @@ func GetListingURLS(stateCodes []string, con websocket.Conn) {
 
 //GetContactInfoURLS comment
 func GetContactInfoURLS(link string) string {
-	fmt.Println(link)
-	var emailLink string
-	c.OnHTML("button.reply-button.js-only", func(e *colly.HTMLElement) {
-		doc.Find("form").Each(func(i int, formDoc *goquery.Selection) {
-			if loginFormSelection != nil {
-				return
-			}
-			formDoc.Find("input").Each(func(_ int, inputDoc *goquery.Selection) {
-				if loginFormSelection != nil {
-					return
-				}
-				if name, ok := inputDoc.Attr("name"); ok {
-					if strings.Contains(strings.ToLower(name), "pass") {
-						loginFormSelection = formDoc
-					}
-				}
-			})
-		})
+	c.OnResponse(func(r *colly.Response) {
+		fmt.Println("Visited", r.Request.URL)
 	})
-
+	c.OnHTML("div.reply-info.js-only", func(e *colly.HTMLElement) {
+		e.DOM.RemoveClass("display:none;")
+		fmt.Println("remove", e.DOM.Text())
+		e.DOM.AddClass("display:block;")
+		// ch := e.DOM.Children()
+		// ch.ForEach("table tr", func(_ int, el *colly.HTMLElement) {
+		// 	mail := Mail{
+		// 		Title:   el.ChildText("td:nth-of-type(1)"),
+		// 		Link:    el.ChildAttr("td:nth-of-type(1)", "href"),
+		// 		Author:  el.ChildText("td:nth-of-type(2)"),
+		// 		Date:    el.ChildText("td:nth-of-type(3)"),
+		// 		Message: el.ChildText("td:nth-of-type(4)"),
+		// 	}
+		// 	threads[threadSubject] = append(threads[threadSubject], mail)
+		// })
+		// fmt.Println(e.DOM.Text())
+		// fmt.Println(e.DOM.Find("a[href]").Text())
+		// fmt.Println(e.DOM.Find("a.mailapp").Text())
+		
+	})
+	// c.OnHTML("a[href]", func(e *colly.HTMLElement) {
+	// 	e.Request.Visit(e.Attr("href"))
+	// })
+	
 	c.Visit(link)
 	c.Wait()
-	return emailLink
+	// Load the HTML document
+	// doc, err := goquery.NewDocumentFromReader(res.Body)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// // document, err := goquery.NewDocumentFromReader(bytes.NewReader(r.Body))
+	// // if err != nil {
+	// // 	fmt.Errorf("Error loading HTTP response body. ", err)
+	// // }
+	// fmt.Printf("%s", doc.Text())
+	// doc.Find(".reply-info.js-only").Each(func(i int, s *goquery.Selection) {
+	// 	// band := s.Find("a").Text()
+	// 	// title := s.Find("i").Text()
+	// 	fmt.Printf("%s", s.Text())
+	// })
+
+	return ""
 }
 
 //func GetContactInfoURLS(listings []Listing) []Listing {
