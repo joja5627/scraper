@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"github.com/gorilla/websocket"
 )
@@ -39,20 +40,30 @@ func GetListingURLS(stateCodes []string, con websocket.Conn) {
 }
 
 //GetContactInfoURLS comment
-func GetContactInfoURLS(listings []Listing, con websocket.Conn) []Listing {
-
-	for i := range listings {
-		percentComplete := fmt.Sprintf("%f", (float64(i)/float64(len(listings)))*100)
-		con.WriteJSON(SocketMessage{MessageType: "contactInfoPercentComplete", Payload: percentComplete})
-		c.OnHTML("button.reply-button.js-only", func(e *colly.HTMLElement) {
-			serviceID := e.Attr("data-href")
-			contactInfoUrl := strings.Replace(serviceID, "/__SERVICE_ID__", listings[i].StateOrg, -1)
-			listings[i].ContactInfoUrl = contactInfoUrl
+func GetContactInfoURLS(link string) string {
+	fmt.Println(link)
+	var emailLink string
+	c.OnHTML("button.reply-button.js-only", func(e *colly.HTMLElement) {
+		doc.Find("form").Each(func(i int, formDoc *goquery.Selection) {
+			if loginFormSelection != nil {
+				return
+			}
+			formDoc.Find("input").Each(func(_ int, inputDoc *goquery.Selection) {
+				if loginFormSelection != nil {
+					return
+				}
+				if name, ok := inputDoc.Attr("name"); ok {
+					if strings.Contains(strings.ToLower(name), "pass") {
+						loginFormSelection = formDoc
+					}
+				}
+			})
 		})
-		c.Visit(listings[i].ListingUrl)
+	})
 
-	}
-	return listings
+	c.Visit(link)
+	c.Wait()
+	return emailLink
 }
 
 //func GetContactInfoURLS(listings []Listing) []Listing {

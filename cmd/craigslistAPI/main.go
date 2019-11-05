@@ -89,6 +89,7 @@ func main() {
 		if link == "" {
 			c.JSON(422, "missing post address")
 		}
+		scrape.GetContactInfoURLS(link)
 
 	})
 	r.Run()
