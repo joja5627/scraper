@@ -2,7 +2,7 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/joja5627/github.com/joja5627/scraper/internal/scrape"
+	"github.com/joja5627/scraper/internal/scrape"
 	"math/rand"
 	"net/http"
 	"time"

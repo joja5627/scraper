@@ -82,16 +82,13 @@ func main() {
 	})
 	r.POST("/sendEmail", func(c *gin.Context) {
 
-		body := map[string]string{}
-		err := json.NewDecoder(c.Request.Body).Decode(&body)
+		body := scrape.Listing{}
+		err := json.NewDecoder(c.Request.Body).Decode(body)
 		if err != nil {
-			c.JSON(422, "malformed request")
+			body := map[string]string{"error": "bad request body"}
+			c.JSON(500,body)
 		}
-		link := body["link"]
-		if link == "" {
-			c.JSON(422, "missing post address")
-		}
-		scrape.GetContactInfoURLS(link)
+		scrape.GetContactInfoURLS(body)
 
 	})
 	r.Run()

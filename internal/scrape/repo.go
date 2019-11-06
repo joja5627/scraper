@@ -1,8 +1,6 @@
 package scrape
 
 import (
-	"time"
-
 	"github.com/globalsign/mgo"
 )
 
@@ -60,21 +58,21 @@ func NewMongoRepository(session *mgo.Session) (*MongoRepository, error) {
 // }
 
 // Add adds an user to the repository
-func (r *MongoRepository) Add(listing *Listing) error {
-	session, coll := r.getSession()
-	defer session.Close()
-	listing.Date = time.Now()
-	coll.Insert(listing)
-
-	// _, err := coll.Upsert(bson.M{"username": user.Username}, user)
-	// if err != nil {
-	// 	log.WithField("username", user.Username).Error("There was an error adding the user")
-	// 	return err
-	// }
-
-	// log.WithField("username", user.Username).Debug("User added")
-	return nil
-}
+//func (r *MongoRepository) Add(listing *Listing) error {
+//	session, coll := r.getSession()
+//	defer session.Close()
+//	listing.Date = time.Now()
+//	coll.Insert(listing)
+//
+//	// _, err := coll.Upsert(bson.M{"username": user.Username}, user)
+//	// if err != nil {
+//	// 	log.WithField("username", user.Username).Error("There was an error adding the user")
+//	// 	return err
+//	// }
+//
+//	// log.WithField("username", user.Username).Debug("User added")
+//	return nil
+//}
 func (r *MongoRepository) getSession() (*mgo.Session, *mgo.Collection) {
 	session := r.session.Copy()
 	coll := session.DB("scrape_db").C("scrape_collection")
