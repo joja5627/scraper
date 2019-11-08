@@ -12,6 +12,9 @@ import {
   Select,
   TextArea
 } from 'semantic-ui-react';
+import HttpResponseList from './HttpResponseList'
+
+import _ from "lodash"
 
 const ProgressBar = ({ uploadState, percentUploaded }) =>
   uploadState === 'uploading' && (
@@ -37,17 +40,19 @@ const progressBarStyle = {
 
 class TodoList extends React.Component {
   render() {
-    var items = this.props.items.map((item, index) => {
+    var items = this.props.items.map((listing, index) => {
       return (
         <TodoListItem
+          className="margin10 width50"
+          onListingClick={this.props.onListingClick}
           key={index}
-          item={item}
+          listing={listing}
           index={index}
           removeItem={this.props.removeItem}
         />
       );
     });
-    return <span>{items}</span>;
+    return <Container clasName="padding40" textAlign="left">{items}</Container>;
   }
 }
 
@@ -55,18 +60,38 @@ class TodoListItem extends React.Component {
   constructor(props) {
     super(props);
     this.onClickClose = this.onClickClose.bind(this);
+    this.onClickEmail = this.onClickEmail.bind(this);
+
+  }
+ 
+  onClickEmail() {
+    const { index,listing } = this.props
+    var parsedIndex = parseInt(index);
+    this.props.removeItem(parsedIndex);
+    this.props.onListingClick(listing)
   }
   onClickClose() {
     var index = parseInt(this.props.index);
     this.props.removeItem(index);
   }
+  //      <a href={`${this.props.item}`}> </a>
+  //      <div onClick={this.props.onClick}>{this.props.item}</div>
 
   render() {
+    const { listing } = this.props
     return (
-      <p className="margin0 padding0" align="left">
-        <Icon name="close icon" onClick={this.onClickClose}></Icon>
-        <a href={`${this.props.item}`}> {this.props.item}</a>
+      <p className="listing">
+
+        <button onClick={this.onClickClose} class="ui icon button">
+          <i class="times icon"></i>
+        </button>
+        <button onClick={this.onClickEmail} class="ui icon button">
+          <i class="envelope icon"></i>
+        </button>
+        <span className="text-overflow"> {listing.title}</span>
       </p>
+
+
     );
   }
 }
@@ -75,13 +100,16 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      links: [],
+      listings: [],
       eventTarget: null,
       webSocket: null,
       linkViewLimit: 300,
-      linkCount: 0
+      linkCount: 0,
+      emailAll: false,
+      selectedListing: null,
+      sendEmailResponse: null
     };
-    this.buildLinkEl = this.buildLinkEl.bind(this);
+
     this.removeItem = this.removeItem.bind(this);
     this.clListingScrapePercentage = 0;
     this.contactInfoScrapePercentage = 0;
@@ -94,22 +122,30 @@ class App extends Component {
   onEvent = event => {
     if (event.messageType === 'listingPercentComplete') {
       this.setState({ clListingScrapePercentage: Math.round(event.payload) });
-    } else if (event.messageType === 'listingURLs') {
-      if (!this.state.links.includes(event.payload)) {
-        let newLinks = this.state.links;
-        newLinks.push(event.payload);
-        this.setState({ links: newLinks, linkCount: newLinks.length });
+    }
+    else if (event.messageType === 'listing') {
+      let newListing = JSON.parse(event.payload)
+      if (!_.find(this.state.listings, { url: newListing.url })) {
+        if(this.state.emailAll){
+          this.sendEmail(newListing)
+        }else{
+          let newListings = this.state.listings;
+          newListings.push(newListing);
+          this.setState({ links: newListings, linkCount: newListings.length });
+
+        }
       }
+
     }
   };
 
   closeSocket = () => {
     if (this.state.socket) {
-      console.log('closing');
+      this.state.socket.send("close server");
       this.state.socket.close();
-      console.log('closed');
       this.setState({
-        socket: null
+        socket: null,
+        clListingScrapePercentage: 0
       });
     }
   };
@@ -131,6 +167,7 @@ class App extends Component {
     };
     socket.onclose = () => {
       console.log('closing');
+
       socket.close();
       console.log('closed');
       this.setState({
@@ -138,21 +175,21 @@ class App extends Component {
       });
     };
   };
+  sendEmail = (listing) => {
+    
+    fetch("http://localhost:8080/sendEmail", {
+      method: 'POST', // or 'PUT'
+      body: JSON.stringify(listing), // data can be `string` or {object}!
+      headers: {
+        'Content-Type': 'application/json',
+        "Accept": "application/json"
+      }
+    }).then(res => {
+      this.setState({ sendEmailResponse: res })
+    })
 
-  buildLinkEl(links) {
-    var items = links.map((item, index) => {
-      console.log(this.removeItem);
-      return (
-        <TodoListItem
-          key={index}
-          item={item}
-          index={index}
-          removeItem={this.removeItem}
-        />
-      );
-    });
-    return <ul className="list-group"> {items} </ul>;
   }
+
   onInputChange = event => {
     this.setState({ eventTarget: event.target.value.toLowerCase() });
   };
@@ -161,20 +198,17 @@ class App extends Component {
     return link.toLowerCase().search(this.state.eventTarget) !== -1;
   };
 
-  filterList = links => {
+  filterList = listing => {
     if (this.state.eventTarget) {
-      return links.filter(link => this.filterFunction(link));
+      return listing.filter(link => this.filterFunction(link));
     } else {
-      return links;
+      return listing;
     }
   };
-  limitResults = links => {
-      return links.
-  }
+
 
   render() {
-    const { links } = this.state;
-
+    const { sendEmailResponse } = this.state
     return (
       <div className="App">
         <Container textAlign="center">
@@ -186,9 +220,9 @@ class App extends Component {
             />
           )}
 
-          <Grid columns={2} divided>
+          <Grid columns={3} divided>
             <Grid.Row>
-              <Grid.Column width={3}>
+              <Grid.Column width={4}>
                 <text>{`link count: ${this.state.linkCount}`}</text>
                 <Card>
                   <Form>
@@ -204,35 +238,46 @@ class App extends Component {
                           <Button onClick={this.restartSocket} icon>
                             <Icon name="redo" />
                           </Button>
+                          <Button active={this.state.emailAll} onClick={() => this.setState({ emailAll: !this.state.emailAll })} icon>
+                            <Icon name="envelope" />
+                          </Button>
                         </Button.Group>
                       </Card.Meta>
-                      <Card.Description>
-                        <div className="ui action input">
+                      <Card.Description  >
+                        <input
+                          className="m-t-10"
+                          type="text"
+                          onChange={this.onInputChange}
+                          name="filter-field"
+                          placeholder="filter results"
+                        />
+                        {/* // <p className="margin0 padding0" align="left">
+      //   <Icon name="close icon" onClick={this.onClickClose}></Icon>
+      //   <a href={`${this.props.item}`}> {this.props.item}</a>
+      // </p> */}
+                        {/* <div className="ui action input">
                           <input type="text" placeholder="Search...">
                             <button className="ui button">Search</button>
                           </input>
-                        </div>
+                        </div> */}
                       </Card.Description>
                     </Card.Content>
-                    <Card.Content extra>
-                      <input
-                        type="text"
-                        onChange={this.onInputChange}
-                        name="filter-field"
-                        placeholder="filter results"
-                      />
-                    </Card.Content>
+
                   </Form>
                 </Card>
               </Grid.Column>
 
-              <Grid.Column width={12}>
-                {links && (
+              <Grid.Column width={6}>
+                {this.state.listings && (
                   <TodoList
-                    items={this.filterList(this.state.links)}
+                    onListingClick={(listing) => this.sendEmail(listing)}
+                    items={this.filterList(this.state.listings)}
                     removeItem={this.removeItem}
                   />
                 )}
+              </Grid.Column>
+              <Grid.Column width={6}>
+                <HttpResponseList response={sendEmailResponse} />
               </Grid.Column>
             </Grid.Row>
           </Grid>

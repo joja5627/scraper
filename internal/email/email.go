@@ -1,101 +1,89 @@
 package email
 
 import (
-	"crypto/tls"
-	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/smtp"
-	"strings"
+	"net/http"
+	"net/url"
+	"os"
+	"os/user"
+	"path/filepath"
+
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 )
 
-var (
-	serverAddr = "smtp.gmail.com"
-	password   = "Cu112145@buff"
-	emailAddr  = "joja5627@gmail.com"
-	userName   = "joja5627"
-	portNumber = 465
-	tos        = []string{
-		"joja5627@gmail.com",
-	}
-	cc = []string{
-		"friendC@yandex.com",
-	}
-	attachmentFilePath = "C:\\Users\\Administrator\\go\\src\\github.com\\joja5627\\scraper\\resources\\JJacksonWinter2019.pdf"
-	filename           = "JJacksonWinter2019.pdf"
-	delimeter          = "**=myohmy689407924327"
-)
 
-//Send comment
-func Send(emailAddress string) {
-
-	tlsConfig := tls.Config{
-		ServerName:         "smtp.gmail.com",
-		InsecureSkipVerify: true,
+// getClient uses a Context and Config to retrieve a Token
+// then generate a Client. It returns the generated Client.
+func GetClient(ctx context.Context, config *oauth2.Config) *http.Client {
+	cacheFile, err := tokenCacheFile()
+	if err != nil {
+		log.Fatalf("Unable to get path to cached credential file. %v", err)
 	}
-
-	conn, connErr := tls.Dial("tcp", fmt.Sprintf("%s:%d", "smtp.gmail.com", 465), &tlsConfig)
-	if connErr != nil {
-		log.Panic(connErr)
+	tok, err := tokenFromFile(cacheFile)
+	if err != nil {
+		tok = getTokenFromWeb(config)
+		saveToken(cacheFile, tok)
 	}
-	defer conn.Close()
-
-	client, clientErr := smtp.NewClient(conn, serverAddr)
-	if clientErr != nil {
-		log.Panic(clientErr)
-	}
-	defer client.Close()
-
-	auth := smtp.PlainAuth(userName, emailAddr, password, serverAddr)
-
-	if err := client.Auth(auth); err != nil {
-		log.Panic(err)
-	}
-
-	if err := client.Mail(emailAddr); err != nil {
-		log.Panic(err)
-	}
-	for _, to := range tos {
-		if err := client.Rcpt(to); err != nil {
-			log.Panic(err)
-		}
-	}
-
-	writer, writerErr := client.Data()
-	if writerErr != nil {
-		log.Panic(writerErr)
-	}
-
-	sampleMsg := fmt.Sprintf("From: %s\r\n", emailAddr)
-	sampleMsg += fmt.Sprintf("To: %s\r\n", strings.Join(tos, ";"))
-	if len(cc) > 0 {
-		sampleMsg += fmt.Sprintf("Cc: %s\r\n", strings.Join(cc, ";"))
-	}
-	sampleMsg += "Subject: Software Contracting Position\r\n"
-	sampleMsg += "MIME-Version: 1.0\r\n"
-	sampleMsg += fmt.Sprintf("Content-Type: multipart/mixed; boundary=\"%s\"\r\n", delimeter)
-	sampleMsg += fmt.Sprintf("\r\n--%s\r\n", delimeter)
-	sampleMsg += "Content-Type: text/html; charset=\"utf-8\"\r\n"
-	sampleMsg += "Content-Transfer-Encoding: 7bit\r\n"
-	sampleMsg += fmt.Sprintf("\r\n%s", "<p>My name is Joe Jackson and I would like to apply for the software position you have available. Attached is my resume. Cell - 303 501 5076</p></body></html>\r\n")
-	sampleMsg += fmt.Sprintf("\r\n--%s\r\n", delimeter)
-	sampleMsg += "Content-Type: application/pdf; charset=\"utf-8\"\r\n"
-	sampleMsg += "Content-Transfer-Encoding: base64\r\n"
-	sampleMsg += "Content-Disposition: attachment;filename=\"" + filename + "\"\r\n"
-
-	rawFile, fileErr := ioutil.ReadFile(attachmentFilePath)
-	if fileErr != nil {
-		log.Panic(fileErr)
-	}
-	sampleMsg += "\r\n" + base64.StdEncoding.EncodeToString(rawFile)
-	if _, err := writer.Write([]byte(sampleMsg)); err != nil {
-		log.Panic(err)
-	}
-
-	if closeErr := writer.Close(); closeErr != nil {
-		log.Panic(closeErr)
-	}
-
-	client.Quit()
+	return config.Client(ctx, tok)
 }
+
+// getTokenFromWeb uses Config to request a Token.
+// It returns the retrieved Token.
+func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
+	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	fmt.Printf("Go to the following link in your browser then type the "+
+		"authorization code: \n%v\n", authURL)
+
+	var code string
+	if _, err := fmt.Scan(&code); err != nil {
+		log.Fatalf("Unable to read authorization code %v", err)
+	}
+
+	tok, err := config.Exchange(oauth2.NoContext, code)
+	if err != nil {
+		log.Fatalf("Unable to retrieve token from web %v", err)
+	}
+	return tok
+}
+
+// tokenCacheFile generates credential file path/filename.
+// It returns the generated credential path/filename.
+func tokenCacheFile() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	tokenCacheDir := filepath.Join(usr.HomeDir, ".credentials")
+	os.MkdirAll(tokenCacheDir, 0700)
+	return filepath.Join(tokenCacheDir,
+		url.QueryEscape("gmail-go-quickstart.json")), err
+}
+
+// tokenFromFile retrieves a Token from a given file path.
+// It returns the retrieved Token and any read error encountered.
+func tokenFromFile(file string) (*oauth2.Token, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	t := &oauth2.Token{}
+	err = json.NewDecoder(f).Decode(t)
+	defer f.Close()
+	return t, err
+}
+
+// saveToken uses a file path to create a file and store the
+// token in it.
+func saveToken(file string, token *oauth2.Token) {
+	fmt.Printf("Saving credential file to: %s\n", file)
+	f, err := os.Create(file)
+	if err != nil {
+		log.Fatalf("Unable to cache oauth token: %v", err)
+	}
+	defer f.Close()
+	json.NewEncoder(f).Encode(token)
+}
+

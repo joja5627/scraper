@@ -7,8 +7,10 @@ type Listing struct {
 	//ScrapeID       bson.ObjectId "_id,omitempty"
 	//Date           time.Time     `json:"created"`
 	StateCode      string        `json:"stateOrg"`
-	Url            string        `json:"listingUrl"`
+	Title      	   string        `json:"title"`
+	Url            string        `json:"url"`
 	ContactInfoUrl string        `json:"contactInfoUrl"`
+	ListingInfoResponse string    `json:"listingInfoResponse"`
 	EmailResponse  string        `json:"emailResponse"`
 	Email          string        `json:"email"`
 }

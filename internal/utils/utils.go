@@ -2,10 +2,7 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/joja5627/scraper/internal/scrape"
-	"math/rand"
 	"net/http"
-	"time"
 )
 
 func AcessControl(h http.Handler) http.Handler {
@@ -39,12 +36,12 @@ func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
 	json.NewEncoder(w).Encode(payload)
 	return
 }
-func SelectRandomListings(n int,listings []scrape.Listing)[]int{
-	rand.Seed(time.Now().UnixNano())
-	selected := []scrape.Listing{}
-	for _= range MakeRange(0,n){
-		selected = append(selected,listings[rand.Intn(len(listings)-1)])
-	}
-}
+//func SelectRandomListings(n int,listings []scrape.Listing)[]int{
+//	rand.Seed(time.Now().UnixNano())
+//	selected := []scrape.Listing{}
+//	for _= range MakeRange(0,n){
+//		selected = append(selected,listings[rand.Intn(len(listings)-1)])
+//	}
+//}
 
 
