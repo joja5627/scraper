@@ -1,50 +1,91 @@
 package scrape
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/corpix/uarand"
 	"github.com/gocolly/colly"
 	"github.com/gorilla/websocket"
-	"github.com/joja5627/scraper/internal/utils"
-	"regexp"
-	"strings"
-)
-
-var (
-	collector = colly.NewCollector(
-		colly.MaxDepth(1),
-		colly.Async(false),
-	)
 )
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	Conn *websocket.Conn
+	Conn             *websocket.Conn
+	MessageChannel   chan SocketMessage
 	TerminateChannel chan bool
+	Collector        *colly.Collector
 }
+
+func getCollector() *colly.Collector {
+	return colly.NewCollector(
+		colly.MaxDepth(1),
+		colly.UserAgent(uarand.GetRandom()),
+		colly.Async(false),
+	)
+}
+
+//func getCollectorAsync() *colly.Collector {
+//	 colly.NewCollector(
+//		colly.MaxDepth(1),
+//		colly.UserAgent(uarand.GetRandom()),
+//		colly.Async(true),
+//	)
+//	colly.LimitRule{&colly.LimitRule{DomainGlob: "*", Parallelism: 12}}
+//
+//	colly.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: 12})
+//	return colly
+//
+//}
+
 // WriteSocket
-func (c *Client) WriteSocket(statesQueue utils.Queue) {
+func (c *Client) WriteSocket(stateCodes []string) {
 	completionCounter := 0
-	Loop:
-		for{
+	go func() {
+
+		for {
 			select {
-				case <- c.TerminateChannel:
-					break Loop
-				default:
-					if(statesQueue.Len() > 0){
-						completionCounter = completionCounter + 1
-						percentComplete := fmt.Sprintf("%f", (float64(completionCounter) / float64(statesQueue.Len())) * 100)
-						c.Conn.WriteJSON(SocketMessage{MessageType:"listingPercentComplete",Payload:percentComplete})
-						c.scrapeState(fmt.Sprintf("%v", statesQueue.Remove().Value))
-					}else{
-						c.TerminateChannel <- true
-					}
+			case socketMessage := <-c.MessageChannel:
+				if socketMessage.MessageType == "state" {
+					completionCounter = completionCounter + 1
+					divisor := float64(len(stateCodes))
+					percentComplete := float64(completionCounter) / divisor
+					scaledPercent := percentComplete * 100
+					c.Conn.WriteJSON(SocketMessage{MessageType: "percentComplete", Payload: fmt.Sprintf("%f", scaledPercent)})
 				}
+
+				c.Conn.WriteJSON(socketMessage)
+			case <-c.TerminateChannel:
+				if err := c.Conn.Close(); err != nil {
+					fmt.Println(err)
+				}
+
+			default:
+				{
+					//if()
+					//
+					//c.Collector.Wait()
+				}
+			}
 		}
-
-
+	}()
 }
 
+//
+//writer, _ := c.Conn.NextWriter(websocket.TextMessage)
+//socketMessage, _ := json.Marshal(})
+//
+//writer.Write(socketMessage)
+//writer.Close()
+//completionCounter := 0
+//Loop:
+//	for{
+//		select {
+//			case <- c.TerminateChannel:
+//				break Loop
+//			default:
+//
+//
+//			}
+//	}
 
 // ReadSocket
 func (c *Client) ReadSocket() {
@@ -58,37 +99,21 @@ func (c *Client) ReadSocket() {
 
 	}
 }
-func (c *Client) scrapeState(state string){
-	stateOrg := fmt.Sprintf("https://%s.craigslist.org", state)
-	clQuery := fmt.Sprintf("%s/search/sof?employment_type=3",stateOrg)
-	collector.OnHTML("a.result-title.hdrlnk", func(e *colly.HTMLElement) {
-		listingURL := e.Attr("href")
-		splitURL := strings.Split(listingURL, "/")
-		title := splitURL[len(splitURL) - 2]
-		listing :=  Listing{StateCode: stateOrg , Url:listingURL, Title:title}
-
-		b, err := json.Marshal(listing)
-		if err != nil {
-			fmt.Println("error:", err)
-		}
-		c.Conn.WriteJSON(SocketMessage{MessageType:"listing",Payload:string(b)})
-
-	})
-	collector.Visit(clQuery)
+func (c *Client) sendState(message SocketMessage) {
+	c.MessageChannel <- message
 }
-func GetContactInfoURL(listing Listing) string  {
-	info := ""
-	collector.OnHTML("button.reply-button.js-only", func(e *colly.HTMLElement) {
-		info = e.Attr("data-href")
-		r, _ := regexp.Compile("https://([a-z]+).craigslist.org")
-		contactInfoTop := fmt.Sprintf("%s/contactinfo/",r.FindString(listing.Url))
-		info = strings.Replace(info, "/__SERVICE_ID__/", contactInfoTop, 1)
 
-	})
-	collector.Visit(listing.Url)
-	collector.Wait()
-	return info
-}
+//func (c *Client) scrapeState(state string) {
+//	stateMessage  := SocketMessage{MessageType:"state",Payload:state}
+//	defer c.sendState(stateMessage)
+//
+//	collector := getCollector()
+//	stateOrg := fmt.Sprintf("https://%s.craigslist.org", state)
+//
+//
+//
+//}
+
 //3e2212cac1fb397d8ea0e7681e5a9db7@job.craigslist.org
 //https://atlanta.craigslist.org/atl/sof/d/marietta-software-project-manager/7004489537.html
 //https://auburn.craigslist.org/contactinfo/atl/sof/7004489537

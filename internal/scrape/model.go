@@ -1,21 +1,27 @@
 package scrape
 
+import (
+	"github.com/google/uuid"
+)
 
 //Listing comment
 type Listing struct {
-	//ID             bson.ObjectId "_id,omitempty"
+
 	//ScrapeID       bson.ObjectId "_id,omitempty"
 	//Date           time.Time     `json:"created"`
-	StateCode      string        `json:"stateOrg"`
-	Title      	   string        `json:"title"`
-	Url            string        `json:"url"`
-	ContactInfoUrl string        `json:"contactInfoUrl"`
+	ID                  uuid.UUID `json:"id"`
+	StateCode           string    `json:"stateOrg"`
+	Title               string    `json:"title"`
+	Url                 string    `json:"url"`
+	Query               string    `json:"query"`
+	ContactInfoUrl      string    `json:"contactInfoUrl"`
 	ListingInfoResponse string    `json:"listingInfoResponse"`
-	EmailResponse  string        `json:"emailResponse"`
-	Email          string        `json:"email"`
+	EmailResponse       string    `json:"emailResponse"`
+	Email               string    `json:"email"`
 }
+
 //SocketMessage
-type SocketMessage struct{
+type SocketMessage struct {
 	MessageType string `json:"messageType"`
-	Payload string `json:"payload"`
+	Payload     string `json:"payload"`
 }

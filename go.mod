@@ -9,8 +9,10 @@ require (
 	github.com/antchfx/xpath v1.1.0 // indirect
 	github.com/apex/gateway v1.1.1
 	github.com/appleboy/drone-lambda v1.1.1 // indirect
+	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/aws/aws-lambda-go v1.13.2 // indirect
 	github.com/aws/aws-sdk-go v1.25.26 // indirect
+	github.com/corpix/uarand v0.1.1
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/dghubble/gologin v2.1.0+incompatible
 	github.com/dghubble/sling v1.3.0

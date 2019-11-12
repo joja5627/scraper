@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
 	"net/http"
 )
 
@@ -18,7 +17,7 @@ func AcessControl(h http.Handler) http.Handler {
 		h.ServeHTTP(w, r)
 	})
 }
-func HandleError(err error){
+func HandleError(err error) {
 	if err != nil {
 		panic(err)
 	}
@@ -31,11 +30,10 @@ func MakeRange(min, max int) []int {
 	return a
 }
 func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
-	w.WriteHeader(status)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(payload)
+
 	return
 }
+
 //func SelectRandomListings(n int,listings []scrape.Listing)[]int{
 //	rand.Seed(time.Now().UnixNano())
 //	selected := []scrape.Listing{}
@@ -43,5 +41,3 @@ func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
 //		selected = append(selected,listings[rand.Intn(len(listings)-1)])
 //	}
 //}
-
-
