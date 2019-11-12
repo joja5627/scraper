@@ -93,9 +93,11 @@ func main() {
 	c := scrape.BuildCollector()
 	for _, state := range stateCodes {
 		stateOrg := fmt.Sprintf("https://%s.craigslist.org", state)
-		scrape.VisitWithRetry(c, fmt.Sprintf("%s/d/software-qa-dba-etc/search/sof", stateOrg), 30)
-		scrape.VisitWithRetry(c, fmt.Sprintf("%s/search/sof?employment_type=3", stateOrg), 30)
+		scrape.VisitWithRetry(c,fmt.Sprintf("%s/d/software-qa-dba-etc/search/sof", stateOrg),3)
+		scrape.VisitWithRetry(c,fmt.Sprintf("%s/search/sof?employment_type=3", stateOrg),3)
+
 	}
+	c.Wait()
 	//ctx := context.Background()
 	//
 	//b, err := ioutil.ReadFile("/Users/joejackson/GolandProjects/scraper/cmd/craigslistAPI/credentials.json")

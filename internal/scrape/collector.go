@@ -12,6 +12,7 @@ import (
 )
 
 var errors []string
+var currentError error
 var links []string
 var requests []string
 var contactInfos []string
@@ -48,13 +49,13 @@ func getProxyList(collector *colly.Collector) ([]string, error) {
 	return proxyList, nil
 }
 func visitWithRetry(collector *colly.Collector, URL string, retryCount int) {
-	collector.OnError(func(r *colly.Response, err error) {
-		fmt.Println("errors: ", err.Error())
-		fmt.Println("errors: ", len(errors))
-		if retryCount > 0 {
-			r.Request.Retry()
-		}
-	})
+	//collector.OnError(func(r *colly.Response, err error) {
+	//	fmt.Println("errors: ", err.Error())
+	//	fmt.Println("errors: ", len(errors))
+	//	if retryCount > 0 {
+	//		r.Request.Retry()
+	//	}
+	//})
 	collector.Visit(URL)
 	collector.Wait()
 }
@@ -73,6 +74,37 @@ func getProxyFunc(collector *colly.Collector) (colly.ProxyFunc, error) {
 func getRandomItem(len int) int {
 	return int(math.Abs(float64(rand.Intn(len - 1))))
 }
+func VisitWithRetry(collector *colly.Collector, URL string, retryCount int) {
+	for {
+		if(retryCount > 0){
+			collector.Visit(URL)
+			collector.Wait()
+			if(currentError != nil){
+				retryCount -=1
+			}else {
+				break
+			}
+		}else {
+			break
+		}
+	}
+	//if err := ; err != nil {
+	//	count := 1
+	//	fmt.Println("Try", count, err)
+	//	for count <= retryCount {
+	//		count++
+	//		if err := collector.Visit(URL); err != nil {
+	//			fmt.Println("Try", count, err)
+	//		} else {
+	//			fmt.Println(err.Error())
+	//			break
+	//		}
+	//	}
+	//}else {
+	//	fmt.Println(err.Error())
+	//}
+}
+
 
 func ChangeUAWithTimeout(changingTimeout time.Duration, collector *colly.Collector) {
 	rand.Seed(time.Now().Unix())
@@ -81,25 +113,18 @@ func ChangeUAWithTimeout(changingTimeout time.Duration, collector *colly.Collect
 	}
 }
 
-func VisitWithRetry(collector *colly.Collector, URL string, retryCount int) {
-	if err := collector.Visit(URL); err != nil {
-		count := 1
-		fmt.Println("Try", count, err)
-		for count <= retryCount {
-			count++
-			if err := collector.Visit(URL); err != nil {
-				fmt.Println("Try", count, err)
-			} else {
-				break
-			}
-		}
-	}
-}
 
 func BuildCollector() *colly.Collector {
 	collector := colly.NewCollector(
 		colly.AllowURLRevisit(),
-		colly.Async(true))
+		colly.Async(true),
+		colly.ParseHTTPErrorResponse())
+
+	collector.Limit(&colly.LimitRule{
+		DomainGlob:  "*.craigslist.org.*",
+		Parallelism: 2,
+		RandomDelay: 10 * time.Second,
+	})
 
 	proxyFunc, err := getProxyFunc(collector)
 	if err != nil {
@@ -112,13 +137,19 @@ func BuildCollector() *colly.Collector {
 	listUA = list
 
 	collector.SetProxyFunc(proxyFunc)
+
+	collector.OnError(func(r *colly.Response, err error) {
+		fmt.Println("error: ", err.Error())
+		fmt.Println("errors: ", len(errors))
+		currentError = err
+	})
 	collector.OnHTML("a.result-title.hdrlnk", func(e *colly.HTMLElement) {
 
 		listingURL := e.Attr("href")
 		links = append(links, listingURL)
 		fmt.Println("links: ", len(links))
 		fmt.Println(listingURL)
-		collector.Visit(listingURL)
+		VisitWithRetry(collector,listingURL,3)
 
 	})
 	collector.OnHTML("button.reply-button.js-only", func(e *colly.HTMLElement) {
@@ -130,17 +161,18 @@ func BuildCollector() *colly.Collector {
 		fmt.Println("contactInfos: ", len(contactInfos))
 
 	})
-
-	collector.Limit(&colly.LimitRule{
-		DomainGlob:  "*.craigslist.org.*",
-		Parallelism: 2,
-		RandomDelay: 60 * time.Second,
-	})
-
 	collector.OnRequest(func(r *colly.Request) {
+		currentError = nil
 		requests = append(requests, r.URL.String())
-		fmt.Println("errors: ", len(requests))
+		fmt.Println("requests: ", len(requests))
+
 	})
+
+
+	collector.OnResponse(func(r *colly.Response) {
+		fmt.Println("visited", r.Request.URL)
+	})
+
 
 	//collector.OnError(func(r *colly.Response, err error) {
 	//	errors = append(errors,r.Request.URL.String())
@@ -153,9 +185,7 @@ func BuildCollector() *colly.Collector {
 	//	//collector.Visit(retryURL)
 	//})
 
-	collector.OnResponse(func(r *colly.Response) {
-		fmt.Println("visited", r.Request.URL)
-	})
+
 	go ChangeUAWithTimeout(1, collector)
 
 	return collector
