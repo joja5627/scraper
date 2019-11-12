@@ -7,34 +7,42 @@ export default class HttpResponseAlert extends React.Component {
   constructor(props) {
     super(props);
   }
-  // body: (...)
-  // bodyUsed: true
-  // headers: Headers {}
-  // ok: true
-  // redirected: false
-  // status: 200
-  // statusText: "OK"
-  // type: "cors"
-  // url: "http://localhost:1000/register"
 
-  renderBody = body =>{
-    return body ? <i>{JSON.stringify(body)}</i>  : <i>empty</i>  
+  setInterval = () => {
+    this.interval = setInterval(() => 
+            this.props.onClickRemove(this.props.response), 10000);
+  }
+  inRange  = (x, min, max) => {
+    return ((x-min)*(x-max) <= 0);
+  }
+  renderHttpResponseVarient = status => {
+    if (this.inRange(status,200,299)) {
+      return  "success"
+    } else if (this.inRange(status,500,599)) {
+      return "danger"
+    } else if(this.inRange(status,400,499)){
+      return "warning"
+    }
   }
   render() {
-    const {response} = this.props
-    
+    const {response,onClickRemove} = this.props
+    let variant = this.renderHttpResponseVarient(response.status)
+    this.setInterval()
     return (
       <Alert
-        className="padding0"
+        className="padding0 text-left"
         style={fontSize10} 
-        variant={this.props.varient} 
-        onClose={this.props.onDelete} dismissible>
+        variant={variant} 
+        onClick={() => 
+            onClickRemove(response)} dismissible>
       <b>HTTP Status {response.status}</b>
       <br></br>
       <small>HTTP Status Text {response.statusText}</small>
       <br></br>
-      {this.renderBody(this.props.response.body)}
-      <br></br>
+      
+       {Object.keys(response).map((key,index) => {
+           return <span key={`${index}-http-res`}><i>{key} </i><br></br><i>{response[key]} </i></span>
+       })}
     </Alert>
     );
   }

@@ -2,6 +2,10 @@
 .progress__bar {
   margin: 0.3em 0 0 0 !important;
 }
+.progress{
+    background-color: transparent!important;
+    height: 2rem;
+}
 body {
   margin: 0;
   padding: 0;
@@ -40,6 +44,9 @@ padding:0px;
 }
 .m10{
     margin:10px
+}
+.mt10{
+ margin:10px
 }
 .p5{
     padding:5px
