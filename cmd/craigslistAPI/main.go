@@ -4,7 +4,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/queue"
 	"github.com/gorilla/websocket"
+	internalq "github.com/joja5627/scraper/internal/queue"
 	"github.com/joja5627/scraper/internal/scrape"
 	"google.golang.org/api/gmail/v1"
 	"net/http"
@@ -57,14 +59,7 @@ func scrapeCL(stateCodes []string, w http.ResponseWriter, r *http.Request) {
 	//}
 	//collector.SetProxyFunc(rp)
 
-	//q, _ := queue.New(
-	//	2, // Number of consumer threads
-	//	&queue2.InMemoryQueueStorage{MaxSize:10000},
-	//)
 
-	//
-	//}
-	//q.Run(c)
 
 }
 
@@ -91,13 +86,24 @@ func buildEmail(email string, url string) gmail.Message {
 
 func main() {
 	c := scrape.BuildCollector()
+	q, _ := internalq.New(
+		2, // Number of consumer threads
+		&queue.InMemoryQueueStorage{MaxSize:10000},
+	)
 	for _, state := range stateCodes {
 		stateOrg := fmt.Sprintf("https://%s.craigslist.org", state)
-		scrape.VisitWithRetry(c,fmt.Sprintf("%s/d/software-qa-dba-etc/search/sof", stateOrg),3)
-		scrape.VisitWithRetry(c,fmt.Sprintf("%s/search/sof?employment_type=3", stateOrg),3)
+		q.AddURL(fmt.Sprintf("%s/d/software-qa-dba-etc/search/sof", stateOrg))
+		q.AddURL(fmt.Sprintf("%s/search/sof?employment_type=3", stateOrg))
 
 	}
+
+
+	q.Run(c)
 	c.Wait()
+
+	}
+
+	//c.Wait()
 	//ctx := context.Background()
 	//
 	//b, err := ioutil.ReadFile("/Users/joejackson/GolandProjects/scraper/cmd/craigslistAPI/credentials.json")
@@ -250,4 +256,4 @@ func main() {
 	//	}
 	//})
 	//r.Run()
-}
+

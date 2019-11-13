@@ -108,34 +108,37 @@ func VisitWithRetry(collector *colly.Collector, URL string, retryCount int) {
 
 func ChangeUAWithTimeout(changingTimeout time.Duration, collector *colly.Collector) {
 	rand.Seed(time.Now().Unix())
-	for range time.NewTicker(time.Duration(changingTimeout * time.Minute)).C {
+	for range time.NewTicker(time.Duration(changingTimeout * time.Second)).C {
 		collector.UserAgent = listUA[getRandomItem(len(listUA))]
 	}
+}
+func ChangeProxyWithTimeout(changingTimeout time.Duration, collector *colly.Collector) {
+	
 }
 
 
 func BuildCollector() *colly.Collector {
 	collector := colly.NewCollector(
 		colly.AllowURLRevisit(),
-		colly.Async(true),
-		colly.ParseHTTPErrorResponse())
+		colly.Async(true))
 
 	collector.Limit(&colly.LimitRule{
 		DomainGlob:  "*.craigslist.org.*",
 		Parallelism: 2,
-		RandomDelay: 10 * time.Second,
+		RandomDelay: 30 * time.Second,
 	})
 
-	proxyFunc, err := getProxyFunc(collector)
-	if err != nil {
-		fmt.Println("can't set proxy")
-	}
+
 	list, err := getUserAgentsList(collector)
 	if err != nil {
 		fmt.Println("can't build user agent list")
 	}
 	listUA = list
 
+	proxyFunc, err := getProxyFunc(collector)
+	if err != nil {
+		fmt.Println("can't set proxy")
+	}
 	collector.SetProxyFunc(proxyFunc)
 
 	collector.OnError(func(r *colly.Response, err error) {
@@ -164,6 +167,7 @@ func BuildCollector() *colly.Collector {
 	collector.OnRequest(func(r *colly.Request) {
 		currentError = nil
 		requests = append(requests, r.URL.String())
+		fmt.Println("requests: ", r.URL.String())
 		fmt.Println("requests: ", len(requests))
 
 	})
@@ -186,7 +190,7 @@ func BuildCollector() *colly.Collector {
 	//})
 
 
-	go ChangeUAWithTimeout(1, collector)
+	go ChangeUAWithTimeout(10, collector)
 
 	return collector
 }

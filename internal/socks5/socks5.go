@@ -56,6 +56,11 @@ type Server struct {
 	config      *Config
 	authMethods map[uint8]Authenticator
 	Conn net.Conn
+	termChan chan struct{}
+
+}
+func (s *Server) Kill(){
+	close(s.termChan)
 }
 
 // New creates a new Server and potentially returns an error
@@ -99,25 +104,31 @@ func New(conf *Config) (*Server, error) {
 
 // ListenAndServe is used to create a listener and serve on it
 func (s *Server) ListenAndServe(network, addr string) error {
-	l, err := net.Listen(network, addr)
-	if err != nil {
+	s.termChan = make(chan struct{})
+	l, err := net.Listen(network, addr); if err != nil {
 		return err
 	}
-	return s.Serve(l)
+	conn, err := l.Accept(); if err != nil {
+		return err
+	}
+	for {
+		select {
+			case <-s.termChan:
+				fmt.Println("closing ",conn.LocalAddr())
+				err := conn.Close(); if err != nil {
+					return err
+				}
+
+				break
+			default:
+					s.ServeConn(conn); if err != nil {
+				return err
+			}
+		}
+	}
 }
 
-// Serve is used to serve connections from a listener
-func (s *Server) Serve(l net.Listener) (error, net.Conn) {
-	for {
-		conn, err := l.Accept()
-		if err != nil {
-			return err,nil
-		}
-		//s.Conn = conn
-		go s.ServeConn(conn)
-	}
-	return nil,&conn
-}
+
 
 // ServeConn is used to serve a single connection.
 func (s *Server) ServeConn(conn net.Conn) error {
