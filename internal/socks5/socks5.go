@@ -55,11 +55,12 @@ type Config struct {
 type Server struct {
 	config      *Config
 	authMethods map[uint8]Authenticator
-	Conn net.Conn
-	termChan chan struct{}
-
+	Conn        net.Conn
+	termChan    chan bool
 }
-func (s *Server) Kill(){
+
+func (s *Server) Kill() {
+	s.termChan <- true
 	close(s.termChan)
 }
 
@@ -103,32 +104,48 @@ func New(conf *Config) (*Server, error) {
 }
 
 // ListenAndServe is used to create a listener and serve on it
-func (s *Server) ListenAndServe(network, addr string) error {
-	s.termChan = make(chan struct{})
-	l, err := net.Listen(network, addr); if err != nil {
-		return err
-	}
-	conn, err := l.Accept(); if err != nil {
-		return err
-	}
+func (s *Server) ListenAndServe(network, addr string) {
+	s.termChan = make(chan bool)
+	var l net.Listener
+	var listenerErr error
+	var serverErr error
+	var acceptErr error
+	var conn net.Conn
+
+	defer func() {
+		fmt.Println("closing")
+		fmt.Println("closing ", conn.LocalAddr())
+		err := l.Close()
+		if err != nil {
+			panic(err)
+		}
+		conErr := conn.Close()
+		if conErr != nil {
+			panic(conErr)
+		}
+
+	}()
 	for {
 		select {
-			case <-s.termChan:
-				fmt.Println("closing ",conn.LocalAddr())
-				err := conn.Close(); if err != nil {
-					return err
-				}
+		case <-s.termChan:
+			return
 
-				break
-			default:
-					s.ServeConn(conn); if err != nil {
-				return err
+		default:
+			l, listenerErr = net.Listen(network, addr)
+			if listenerErr != nil {
+				panic(listenerErr)
+			}
+			conn, acceptErr = l.Accept()
+			if acceptErr != nil {
+				panic(acceptErr)
+			}
+			serverErr = s.ServeConn(conn)
+			if serverErr != nil {
+				panic(serverErr)
 			}
 		}
 	}
 }
-
-
 
 // ServeConn is used to serve a single connection.
 func (s *Server) ServeConn(conn net.Conn) error {

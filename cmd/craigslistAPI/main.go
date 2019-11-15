@@ -30,7 +30,6 @@ var upgrader = websocket.Upgrader{
 
 func getRequest(rawUrl string, c *colly.Context) *colly.Request {
 	h := http.Header{}
-
 	url, _ := url.Parse(rawUrl)
 	request := colly.Request{URL: url, Headers: &h, Ctx: c}
 	return &request
@@ -59,8 +58,6 @@ func scrapeCL(stateCodes []string, w http.ResponseWriter, r *http.Request) {
 	//}
 	//collector.SetProxyFunc(rp)
 
-
-
 }
 
 func buildEmail(email string, url string) gmail.Message {
@@ -88,7 +85,7 @@ func main() {
 	c := scrape.BuildCollector()
 	q, _ := internalq.New(
 		2, // Number of consumer threads
-		&queue.InMemoryQueueStorage{MaxSize:10000},
+		&queue.InMemoryQueueStorage{MaxSize: 10000},
 	)
 	for _, state := range stateCodes {
 		stateOrg := fmt.Sprintf("https://%s.craigslist.org", state)
@@ -97,163 +94,161 @@ func main() {
 
 	}
 
-
 	q.Run(c)
 	c.Wait()
 
-	}
+}
 
-	//c.Wait()
-	//ctx := context.Background()
-	//
-	//b, err := ioutil.ReadFile("/Users/joejackson/GolandProjects/scraper/cmd/craigslistAPI/credentials.json")
-	//if err != nil {
-	//	log.Fatalf("Unable to read client secret file: %v", err)
-	//}
-	//
-	//config, err := google.ConfigFromJSON(b, gmail.MailGoogleComScope)
-	//if err != nil {
-	//	log.Fatalf("Unable to parse client secret file to config: %v", err)
-	//}
-	//client := email.GetClient(ctx, config)
-	//
-	//srv, err := gmail.New(client)
-	//if err != nil {
-	//	log.Fatalf("Unable to retrieve gmail Client %v", err)
-	//}
+//c.Wait()
+//ctx := context.Background()
+//
+//b, err := ioutil.ReadFile("/Users/joejackson/GolandProjects/scraper/cmd/craigslistAPI/credentials.json")
+//if err != nil {
+//	log.Fatalf("Unable to read client secret file: %v", err)
+//}
+//
+//config, err := google.ConfigFromJSON(b, gmail.MailGoogleComScope)
+//if err != nil {
+//	log.Fatalf("Unable to parse client secret file to config: %v", err)
+//}
+//client := email.GetClient(ctx, config)
+//
+//srv, err := gmail.New(client)
+//if err != nil {
+//	log.Fatalf("Unable to retrieve gmail Client %v", err)
+//}
 
-	//gin.SetMode(gin.DebugMode)
-	//r := gin.New()
-	//r.Use(cors.Default())
-	//r.Use(gin.Logger())
-	//r.Use(gin.Recovery())
-	//
-	//r.GET("/scrape", func(c *gin.Context) {
-	//
-	//	scrapeCL(stateCodes,c.Writer, c.Request)
-	//
-	//})
-	//r.POST("/sendEmail", func(c *gin.Context) {
-	//
-	//
-	//	listing := scrape.Listing{}
-	//	err := json.NewDecoder(c.Request.Body).Decode(&listing)
-	//	if err != nil {
-	//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),"statusText":http.StatusText(http.StatusBadRequest),"error":err.Error()}
-	//		c.JSON(http.StatusBadRequest,body)
-	//		return
-	//	}
-	//
-	//
-	//	contactInfo := scrape.GetContactInfoURL(listing)
-	//	if contactInfo == "" {
-	//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),"statusText":http.StatusText(http.StatusBadRequest),"error": "no contact info for link"}
-	//		c.JSON(http.StatusBadRequest,body)
-	//		return
-	//	}
-	//
-	//	listing.ContactInfoUrl = contactInfo
-	//	r, _ := regexp.Compile(":([a-zA-Z0-9])+@job.craigslist.org")
-	//	infoRESP, err := http.Get(listing.ContactInfoUrl)
-	//	if infoRESP == nil {
-	//		jsonListing, _ := json.Marshal(listing)
-	//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
-	//			"statusText":http.StatusText(http.StatusBadRequest),
-	//			"body": string(jsonListing)}
-	//		c.JSON(http.StatusBadRequest,body)
-	//		return
-	//	}
-	//
-	//
-	//	if err != nil {
-	//		jsonListing, _ := json.Marshal(listing)
-	//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
-	//			"statusText":http.StatusText(http.StatusBadRequest),
-	//			"body": string(jsonListing)}
-	//		c.JSON(http.StatusBadRequest,body)
-	//		return
-	//	}
-	//
-	//	htmlData, err := ioutil.ReadAll(infoRESP.Body)
-	//	if err != nil {
-	//		jsonListing, _ := json.Marshal(listing)
-	//		body := map[string]string{"status":fmt.Sprintf("%d",http.StatusBadRequest),
-	//			"statusText":http.StatusText(http.StatusBadRequest),
-	//			"body": string(jsonListing)}
-	//		c.JSON(http.StatusBadRequest,body)
-	//		return
-	//	}
-	//
-	//	if htmlData == nil {
-	//		jsonListing, _ := json.Marshal(listing)
-	//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
-	//			"statusText":http.StatusText(http.StatusBadRequest),
-	//			"body": string(jsonListing)}
-	//		c.JSON(http.StatusBadRequest,body)
-	//		return
-	//	}
-	//
-	//
-	//	if err != nil {
-	//		jsonListing, _ := json.Marshal(listing)
-	//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
-	//			"statusText":http.StatusText(http.StatusBadRequest),
-	//			"body": string(jsonListing)}
-	//		c.JSON(http.StatusBadRequest,body)
-	//		return
-	//	}
-	//
-	//	emailString := r.FindString(string(htmlData))
-	//
-	//	listing.Email = strings.Trim(emailString, ":")
-	//
-	//
-	//	if listing.Email  != ""{
-	//
-	//		queryString := fmt.Sprintf("in:sent %s ",listing.Url)
-	//
-	//		messages,err := srv.Users.Messages.List("me").Q(queryString).MaxResults(10000).Do()
-	//
-	//		if len(messages.Messages) > 0 {
-	//			jsonListing, _ := json.Marshal(listing)
-	//			body := map[string]string{
-	//				"status": fmt.Sprintf("%d",http.StatusAccepted),
-	//				"statusText":http.StatusText(http.StatusAccepted),
-	//				"body": string(jsonListing)}
-	//			c.JSON(http.StatusAccepted,body)
-	//			return
-	//		}
-	//
-	//		clEmail := buildEmail(listing.Email,listing.Url)
-	//
-	//		emailResponse, err := srv.Users.Messages.Send("me",&clEmail).Do()
-	//
-	//		if err != nil {
-	//			body := map[string]string{
-	//				"status":fmt.Sprintf("%d",http.StatusInternalServerError),
-	//				"statusText":http.StatusText(http.StatusInternalServerError),
-	//				"error": err.Error()}
-	//			c.JSON(http.StatusInternalServerError,body)
-	//			return
-	//
-	//		}else {
-	//			listing.EmailResponse =  emailResponse.Raw
-	//			jsonListing, _ := json.Marshal(listing)
-	//			body := map[string]string{"status":fmt.Sprintf("%d", http.StatusCreated),
-	//				"statusText":http.StatusText(http.StatusCreated),
-	//				"body": string(jsonListing)}
-	//			c.JSON(http.StatusCreated,body)
-	//			return
-	//
-	//		}
-	//	}else {
-	//		jsonListing, _ := json.Marshal(listing)
-	//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
-	//			"statusText":http.StatusText(http.StatusBadRequest),
-	//			"body": string(jsonListing)}
-	//		c.JSON(http.StatusBadRequest,body)
-	//		return
-	//	}
-	//})
-	//r.Run()
-
+//gin.SetMode(gin.DebugMode)
+//r := gin.New()
+//r.Use(cors.Default())
+//r.Use(gin.Logger())
+//r.Use(gin.Recovery())
+//
+//r.GET("/scrape", func(c *gin.Context) {
+//
+//	scrapeCL(stateCodes,c.Writer, c.Request)
+//
+//})
+//r.POST("/sendEmail", func(c *gin.Context) {
+//
+//
+//	listing := scrape.Listing{}
+//	err := json.NewDecoder(c.Request.Body).Decode(&listing)
+//	if err != nil {
+//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),"statusText":http.StatusText(http.StatusBadRequest),"error":err.Error()}
+//		c.JSON(http.StatusBadRequest,body)
+//		return
+//	}
+//
+//
+//	contactInfo := scrape.GetContactInfoURL(listing)
+//	if contactInfo == "" {
+//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),"statusText":http.StatusText(http.StatusBadRequest),"error": "no contact info for link"}
+//		c.JSON(http.StatusBadRequest,body)
+//		return
+//	}
+//
+//	listing.ContactInfoUrl = contactInfo
+//	r, _ := regexp.Compile(":([a-zA-Z0-9])+@job.craigslist.org")
+//	infoRESP, err := http.Get(listing.ContactInfoUrl)
+//	if infoRESP == nil {
+//		jsonListing, _ := json.Marshal(listing)
+//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
+//			"statusText":http.StatusText(http.StatusBadRequest),
+//			"body": string(jsonListing)}
+//		c.JSON(http.StatusBadRequest,body)
+//		return
+//	}
+//
+//
+//	if err != nil {
+//		jsonListing, _ := json.Marshal(listing)
+//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
+//			"statusText":http.StatusText(http.StatusBadRequest),
+//			"body": string(jsonListing)}
+//		c.JSON(http.StatusBadRequest,body)
+//		return
+//	}
+//
+//	htmlData, err := ioutil.ReadAll(infoRESP.Body)
+//	if err != nil {
+//		jsonListing, _ := json.Marshal(listing)
+//		body := map[string]string{"status":fmt.Sprintf("%d",http.StatusBadRequest),
+//			"statusText":http.StatusText(http.StatusBadRequest),
+//			"body": string(jsonListing)}
+//		c.JSON(http.StatusBadRequest,body)
+//		return
+//	}
+//
+//	if htmlData == nil {
+//		jsonListing, _ := json.Marshal(listing)
+//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
+//			"statusText":http.StatusText(http.StatusBadRequest),
+//			"body": string(jsonListing)}
+//		c.JSON(http.StatusBadRequest,body)
+//		return
+//	}
+//
+//
+//	if err != nil {
+//		jsonListing, _ := json.Marshal(listing)
+//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
+//			"statusText":http.StatusText(http.StatusBadRequest),
+//			"body": string(jsonListing)}
+//		c.JSON(http.StatusBadRequest,body)
+//		return
+//	}
+//
+//	emailString := r.FindString(string(htmlData))
+//
+//	listing.Email = strings.Trim(emailString, ":")
+//
+//
+//	if listing.Email  != ""{
+//
+//		queryString := fmt.Sprintf("in:sent %s ",listing.Url)
+//
+//		messages,err := srv.Users.Messages.List("me").Q(queryString).MaxResults(10000).Do()
+//
+//		if len(messages.Messages) > 0 {
+//			jsonListing, _ := json.Marshal(listing)
+//			body := map[string]string{
+//				"status": fmt.Sprintf("%d",http.StatusAccepted),
+//				"statusText":http.StatusText(http.StatusAccepted),
+//				"body": string(jsonListing)}
+//			c.JSON(http.StatusAccepted,body)
+//			return
+//		}
+//
+//		clEmail := buildEmail(listing.Email,listing.Url)
+//
+//		emailResponse, err := srv.Users.Messages.Send("me",&clEmail).Do()
+//
+//		if err != nil {
+//			body := map[string]string{
+//				"status":fmt.Sprintf("%d",http.StatusInternalServerError),
+//				"statusText":http.StatusText(http.StatusInternalServerError),
+//				"error": err.Error()}
+//			c.JSON(http.StatusInternalServerError,body)
+//			return
+//
+//		}else {
+//			listing.EmailResponse =  emailResponse.Raw
+//			jsonListing, _ := json.Marshal(listing)
+//			body := map[string]string{"status":fmt.Sprintf("%d", http.StatusCreated),
+//				"statusText":http.StatusText(http.StatusCreated),
+//				"body": string(jsonListing)}
+//			c.JSON(http.StatusCreated,body)
+//			return
+//
+//		}
+//	}else {
+//		jsonListing, _ := json.Marshal(listing)
+//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
+//			"statusText":http.StatusText(http.StatusBadRequest),
+//			"body": string(jsonListing)}
+//		c.JSON(http.StatusBadRequest,body)
+//		return
+//	}
+//})
+//r.Run()

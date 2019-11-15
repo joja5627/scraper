@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/joja5627/scraper/internal/socks5"
+
+	"sync"
 	"time"
 )
 
@@ -20,37 +23,65 @@ import (
 //func Start(url string, server *socks5.Server){
 //
 //}
+type Task struct {
+	closed chan struct{}
+	wg     sync.WaitGroup
+	ticker *time.Ticker
+}
 
-func main(){
-	//socks5.ListenAndServe()
-	//conf := &socks5.Config{}
-	//runtime.GOMAXPROCS(1)
-	//var wg sync.WaitGroup
-	//wg.Add(2)
-	//
+func (t *Task) Run() {
+	for {
+		select {
+		case <-t.closed:
+			return
+
+		default:
+			fmt.Print("#")
+			time.Sleep(time.Millisecond * 200)
+			//case <-t.ticker.C:
+			//	handle()
+			//}
+		}
+	}
+}
+
+func (t *Task) Stop() {
+	close(t.closed)
+	t.wg.Wait()
+}
+
+func handle() {
+	for i := 0; i < 5; i++ {
+		fmt.Print("#")
+		time.Sleep(time.Millisecond * 200)
+	}
+	fmt.Println()
+}
+func main() {
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	socks5Service := &socks5.Service{}
+
+	for {
+		fmt.Println("rotating proxies....")
+		urls := socks5Service.RotateServers(10)
+		for url := range urls {
+			fmt.Println(urls[url])
+		}
+		time.Sleep(30 * time.Second)
+	}
+
+	wg.Wait()
+
+	//for i := 0; i < 10; i++ {
+	//	socks5Service.
+	//}
 	//go func() {
 	//	defer wg.Done()
 	//
-	//	killChan := map[string] *socks5.Server{}
 	//
-	//	for i := 1200; i < 1220; i++ {
-	//		soxUrl := fmt.Sprintf("0.0.0.0:%d",i)
-	//		fmt.Println(soxUrl)
-	//		server, err := socks5.New(conf)
-	//		if err != nil {
-	//			panic(err)
-	//		}
-	//		killChan[soxUrl] = server
-	//		go server.ListenAndServe("tcp",soxUrl)
 	//
-	//	}
-	//	for i := 1200; i < 1220; i++ {
-	//		soxUrl := fmt.Sprintf("0.0.0.0:%d",i)
-	//		time.Sleep(10*time.Second)
-	//		fmt.Println("killing ", soxUrl)
-	//		killChan[soxUrl].Kill()
-	//
-	//	}
 	//
 	//}()
 	//wg.Wait()
@@ -58,37 +89,40 @@ func main(){
 	//func Kill(){
 	//	<-sock5KILL
 	//} curl --socks5-hostname localhost:1080 https://www.google.com/
-	shutdown := make(chan bool,1)
-	go waitingFunc(shutdown)
-	time.Sleep(time.Second*5)
-	<-shutdown
+	//
 
+	//exit := make(chan bool)
+	//go server.ListenAndServe("tcp","0.0.0.0:1220",exit)
+	//time.Sleep(time.Second*5)
+	//exit <- true
+	//task := &Task{
+	//	closed: make(chan struct{}),
+	//	ticker: time.NewTicker(time.Second * 2),
+	//}
+	//
+	//c := make(chan os.Signal)
+	//signal.Notify(c, os.Interrupt)
 
+	//task.wg.Add(1)
+	//go func() { defer task.wg.Done(); task.Run() }()
+	//time.Sleep(time.Second * 5)
+	//task.Stop()
+
+	//server := waitingFunc(shutdown,"0.0.0.0:1220")
 
 }
 
-func waitingFunc(shutdown chan bool){
-	 func() {
-		defer func() {
-			shutdown <- true
-		}()
-		for {
-			select {
-				case <- shutdown :
-					fmt.Println("closing")
-					default:
-						time.Sleep(time.Second*2)
-						fmt.Println("running")
+//func waitingFunc(shutdown <- chan bool,url string) *socks5.Server{
 
-				}
-
-
-
-		}
-	}()
-}
-
-
-
-
-
+//	 func() {
+//		defer func() {
+//			fmt.Println("closing")
+//		}()
+//		for {
+//			err := server.ListenAndServe("tcp",url) ;if err != nil {
+//				panic(err)
+//			}
+//		}
+//	}()
+//	return server
+//}

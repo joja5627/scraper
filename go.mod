@@ -24,7 +24,6 @@ require (
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
-	github.com/golang/protobuf v1.3.1
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
@@ -36,6 +35,7 @@ require (
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/onsi/ginkgo v1.10.3 // indirect
 	github.com/onsi/gomega v1.7.1 // indirect
+	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
@@ -43,11 +43,10 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/temoto/robotstxt v1.1.1 // indirect
 	github.com/tj/assert v0.0.0-20190920132354-ee03d75cd160 // indirect
-	github.com/zuiwuchang/king-go v0.0.0-20180605060705-66ba03238f72
+	github.com/zuiwuchang/king-go v0.0.0-20180605060705-66ba03238f72 // indirect
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	golang.org/x/net v0.0.0-20190603091049-60506f45cf65
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.13.0
 	google.golang.org/appengine v1.6.5 // indirect
-	google.golang.org/grpc v1.20.1
 )
