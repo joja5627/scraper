@@ -56,12 +56,16 @@ type Server struct {
 	config      *Config
 	authMethods map[uint8]Authenticator
 	Conn        net.Conn
-	termChan    chan bool
+	termChan    chan struct{}
 }
 
 func (s *Server) Kill() {
-	s.termChan <- true
-	close(s.termChan)
+
+	if s.termChan != nil {
+		close(s.termChan)
+		<-s.termChan
+	}
+
 }
 
 // New creates a new Server and potentially returns an error
@@ -103,48 +107,41 @@ func New(conf *Config) (*Server, error) {
 	return server, nil
 }
 
-// ListenAndServe is used to create a listener and serve on it
-func (s *Server) ListenAndServe(network, addr string) {
-	s.termChan = make(chan bool)
-	var l net.Listener
-	var listenerErr error
-	var serverErr error
-	var acceptErr error
-	var conn net.Conn
+func (s *Server) ListenAndServe(network, addr string) error {
+	l, err := net.Listen(network, addr)
+	if err != nil {
+		return err
+	}
+	return s.Serve(l)
+}
 
-	defer func() {
-		fmt.Println("closing")
-		fmt.Println("closing ", conn.LocalAddr())
-		err := l.Close()
-		if err != nil {
-			panic(err)
-		}
-		conErr := conn.Close()
-		if conErr != nil {
-			panic(conErr)
+// Serve is used to serve connections from a listener
+func (s *Server) Serve(l net.Listener) error {
+	go func() error {
+		s.termChan = make(chan struct{})
+		defer func() {
+			fmt.Println("closing")
+			//fmt.Println("closing ", conn.LocalAddr())
+			err := l.Close()
+			if err != nil {
+				panic(err)
+			}
+			//conErr := conn.Close()
+			//if conErr != nil {
+			//	panic(conErr)
+			//	}
+
+		}()
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return err
+			}
+			go s.ServeConn(conn)
 		}
 
 	}()
-	for {
-		select {
-		case <-s.termChan:
-			return
-
-		default:
-			l, listenerErr = net.Listen(network, addr)
-			if listenerErr != nil {
-				panic(listenerErr)
-			}
-			conn, acceptErr = l.Accept()
-			if acceptErr != nil {
-				panic(acceptErr)
-			}
-			serverErr = s.ServeConn(conn)
-			if serverErr != nil {
-				panic(serverErr)
-			}
-		}
-	}
+	return nil
 }
 
 // ServeConn is used to serve a single connection.

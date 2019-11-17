@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/joja5627/scraper/internal/socks5"
-
 	"sync"
 	"time"
 )
@@ -69,7 +68,7 @@ func main() {
 		for url := range urls {
 			fmt.Println(urls[url])
 		}
-		time.Sleep(30 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	wg.Wait()

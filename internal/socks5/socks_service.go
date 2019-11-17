@@ -6,7 +6,8 @@ import (
 )
 
 type Service struct {
-	Socks5Servers map[string]*Server
+	Socks5Servers   map[string]*Server
+	RotatingServers bool
 }
 
 func getLocalURL() string {
@@ -14,12 +15,9 @@ func getLocalURL() string {
 	if err != nil {
 		panic(err)
 	}
-	return fmt.Sprintf("0.0.0.0:%d", port)
+	return fmt.Sprintf("socks5://localhost:%d", port)
 }
 
-func startServer(server *Server, url string) {
-	server.ListenAndServe("tcp", url)
-}
 func (s *Service) addAndStartServer(url string) {
 	conf := &Config{}
 	server, err := New(conf)
@@ -27,7 +25,7 @@ func (s *Service) addAndStartServer(url string) {
 		panic(err)
 	}
 	s.Socks5Servers[url] = server
-	go startServer(server, url)
+	server.ListenAndServe("tcp", url)
 
 }
 
@@ -35,6 +33,7 @@ func (s *Service) RemoveServer(url string) {
 	s.Socks5Servers[url].Kill()
 }
 func (s *Service) RotateServers(newServerCount int) []string {
+	s.RotatingServers = true
 	var serverURLS = []string{}
 	for k, _ := range s.Socks5Servers {
 		s.Socks5Servers[k].Kill()
@@ -46,6 +45,7 @@ func (s *Service) RotateServers(newServerCount int) []string {
 		serverURLS = append(serverURLS, localURL)
 		s.addAndStartServer(localURL)
 	}
+	s.RotatingServers = false
 	return serverURLS
 
 }

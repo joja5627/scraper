@@ -2,8 +2,11 @@ package scrape
 
 import (
 	"fmt"
+	"github.com/corpix/uarand"
 	"github.com/gocolly/colly"
 	"github.com/gocolly/colly/proxy"
+	internalq "github.com/joja5627/scraper/internal/queue"
+	"github.com/joja5627/scraper/internal/socks5"
 	"math"
 	"math/rand"
 	"regexp"
@@ -60,12 +63,10 @@ func visitWithRetry(collector *colly.Collector, URL string, retryCount int) {
 	collector.Wait()
 }
 
-func getProxyFunc(collector *colly.Collector) (colly.ProxyFunc, error) {
-	proxyList, err := getProxyList(collector)
-	if err != nil {
-		return nil, err
-	}
-	proxyFunc, err := proxy.RoundRobinProxySwitcher(proxyList...)
+func getProxyFunc(proxyService *socks5.Service) (colly.ProxyFunc, error) {
+	newServers := proxyService.RotateServers(30)
+	fmt.Printf("rotating servers")
+	proxyFunc, err := proxy.RoundRobinProxySwitcher(newServers...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,15 +77,16 @@ func getRandomItem(len int) int {
 }
 func VisitWithRetry(collector *colly.Collector, URL string, retryCount int) {
 	for {
-		if(retryCount > 0){
+		if retryCount > 0 {
+			fmt.Println(fmt.Sprintf("retry count %d | url:%s", retryCount, URL))
 			collector.Visit(URL)
 			collector.Wait()
-			if(currentError != nil){
-				retryCount -=1
-			}else {
+			if currentError != nil {
+				retryCount -= 1
+			} else {
 				break
 			}
-		}else {
+		} else {
 			break
 		}
 	}
@@ -105,19 +107,33 @@ func VisitWithRetry(collector *colly.Collector, URL string, retryCount int) {
 	//}
 }
 
-
 func ChangeUAWithTimeout(changingTimeout time.Duration, collector *colly.Collector) {
+	collector.UserAgent = listUA[getRandomItem(len(listUA))]
+
 	rand.Seed(time.Now().Unix())
 	for range time.NewTicker(time.Duration(changingTimeout * time.Second)).C {
 		collector.UserAgent = listUA[getRandomItem(len(listUA))]
 	}
 }
-func ChangeProxyWithTimeout(changingTimeout time.Duration, collector *colly.Collector) {
-	
+func ChangeProxyListWithTimeOut(changingTimeout time.Duration, proxyService *socks5.Service, collector *colly.Collector) {
+
+	proxyFunc, err := getProxyFunc(proxyService)
+	if err != nil {
+		fmt.Println("can't set proxy")
+	}
+	collector.SetProxyFunc(proxyFunc)
+
+	rand.Seed(time.Now().Unix())
+	for range time.NewTicker(time.Duration(changingTimeout * time.Second)).C {
+		proxyFunc, err := getProxyFunc(proxyService)
+		if err != nil {
+			fmt.Println("can't set proxy")
+		}
+		collector.SetProxyFunc(proxyFunc)
+	}
 }
 
-
-func BuildCollector() *colly.Collector {
+func BuildCollector(q *internalq.Queue) *colly.Collector {
 	collector := colly.NewCollector(
 		colly.AllowURLRevisit(),
 		colly.Async(true))
@@ -127,15 +143,9 @@ func BuildCollector() *colly.Collector {
 		Parallelism: 2,
 		RandomDelay: 30 * time.Second,
 	})
+	socks5Service := &socks5.Service{RotatingServers: false}
 
-
-	list, err := getUserAgentsList(collector)
-	if err != nil {
-		fmt.Println("can't build user agent list")
-	}
-	listUA = list
-
-	proxyFunc, err := getProxyFunc(collector)
+	proxyFunc, err := getProxyFunc(socks5Service)
 	if err != nil {
 		fmt.Println("can't set proxy")
 	}
@@ -144,7 +154,19 @@ func BuildCollector() *colly.Collector {
 	collector.OnError(func(r *colly.Response, err error) {
 		fmt.Println("error: ", err.Error())
 		fmt.Println("errors: ", len(errors))
-		currentError = err
+		errors = append(errors, err.Error())
+		if len(errors) > 100 {
+			if !socks5Service.RotatingServers {
+				proxyFunc, err := getProxyFunc(socks5Service)
+				if err != nil {
+					fmt.Println("can't set proxy")
+				}
+				collector.SetProxyFunc(proxyFunc)
+			}
+
+			errors = []string{}
+		}
+		q.AddURL(r.Request.URL.String())
 	})
 	collector.OnHTML("a.result-title.hdrlnk", func(e *colly.HTMLElement) {
 
@@ -152,7 +174,8 @@ func BuildCollector() *colly.Collector {
 		links = append(links, listingURL)
 		fmt.Println("links: ", len(links))
 		fmt.Println(listingURL)
-		VisitWithRetry(collector,listingURL,3)
+		q.AddURL(listingURL)
+		//VisitWithRetry(collector,listingURL,3)
 
 	})
 	collector.OnHTML("button.reply-button.js-only", func(e *colly.HTMLElement) {
@@ -165,18 +188,16 @@ func BuildCollector() *colly.Collector {
 
 	})
 	collector.OnRequest(func(r *colly.Request) {
-		currentError = nil
+		r.Headers.Add("User-Agent", uarand.GetRandom())
 		requests = append(requests, r.URL.String())
-		fmt.Println("requests: ", r.URL.String())
+		fmt.Println("request: ", r.URL.String())
 		fmt.Println("requests: ", len(requests))
 
 	})
 
-
 	collector.OnResponse(func(r *colly.Response) {
 		fmt.Println("visited", r.Request.URL)
 	})
-
 
 	//collector.OnError(func(r *colly.Response, err error) {
 	//	errors = append(errors,r.Request.URL.String())
@@ -188,9 +209,6 @@ func BuildCollector() *colly.Collector {
 	//
 	//	//collector.Visit(retryURL)
 	//})
-
-
-	go ChangeUAWithTimeout(10, collector)
 
 	return collector
 }

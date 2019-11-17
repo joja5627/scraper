@@ -82,11 +82,12 @@ func buildEmail(email string, url string) gmail.Message {
 //"https://sandiego.craigslist.org/contactinfo/sdo/sof/6955927244
 
 func main() {
-	c := scrape.BuildCollector()
 	q, _ := internalq.New(
 		2, // Number of consumer threads
 		&queue.InMemoryQueueStorage{MaxSize: 10000},
 	)
+	c := scrape.BuildCollector(q)
+
 	for _, state := range stateCodes {
 		stateOrg := fmt.Sprintf("https://%s.craigslist.org", state)
 		q.AddURL(fmt.Sprintf("%s/d/software-qa-dba-etc/search/sof", stateOrg))
