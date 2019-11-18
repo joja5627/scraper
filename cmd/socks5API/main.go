@@ -61,15 +61,15 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 	socks5Service := &socks5.Service{}
-
-	for {
-		fmt.Println("rotating proxies....")
-		urls := socks5Service.RotateServers(10)
-		for url := range urls {
-			fmt.Println(urls[url])
-		}
-		time.Sleep(10 * time.Second)
+	urls := socks5Service.RotateServers(10)
+	for url := range urls {
+		fmt.Println(urls[url])
 	}
+	//for {
+	//	fmt.Println("rotating proxies....")
+	//
+	//	time.Sleep(10 * time.Second)
+	//}
 
 	wg.Wait()
 

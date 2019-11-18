@@ -15,7 +15,7 @@ func getLocalURL() string {
 	if err != nil {
 		panic(err)
 	}
-	return fmt.Sprintf("socks5://localhost:%d", port)
+	return fmt.Sprintf("0.0.0.0:%d", port)
 }
 
 func (s *Service) addAndStartServer(url string) {
@@ -34,7 +34,7 @@ func (s *Service) RemoveServer(url string) {
 }
 func (s *Service) RotateServers(newServerCount int) []string {
 	s.RotatingServers = true
-	var serverURLS = []string{}
+	var connectURLS = []string{}
 	for k, _ := range s.Socks5Servers {
 		s.Socks5Servers[k].Kill()
 	}
@@ -42,10 +42,10 @@ func (s *Service) RotateServers(newServerCount int) []string {
 
 	for i := 0; i < newServerCount; i++ {
 		localURL := getLocalURL()
-		serverURLS = append(serverURLS, localURL)
+		connectURLS = append(connectURLS, fmt.Sprintf("socks5://%s", localURL))
 		s.addAndStartServer(localURL)
 	}
 	s.RotatingServers = false
-	return serverURLS
+	return connectURLS
 
 }

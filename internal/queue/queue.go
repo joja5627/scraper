@@ -73,6 +73,30 @@ func (q *Queue) IsEmpty() bool {
 	return s == 0
 }
 
+//func ChangeUAWithTimeout(changingTimeout time.Duration, collector *colly.Collector) {
+//	collector.UserAgent = listUA[getRandomItem(len(listUA))]
+//
+//	rand.Seed(time.Now().Unix())
+//	for range time.NewTicker(time.Duration(changingTimeout * time.Second)).C {
+//		collector.UserAgent = listUA[getRandomItem(len(listUA))]
+//	}
+//}
+//func  (q *Queue) AddURLWithDelay(URL string,delay time.Duration) error {
+//
+//	u, err := url.Parse(URL)
+//	if err != nil {
+//		return err
+//	}
+//	r := &colly.Request{
+//		URL:    u,
+//		Method: "GET",
+//	}
+//	d, err := r.Marshal()
+//	if err != nil {
+//		return err
+//	}
+//	return q.storage.AddRequest(d)
+//}
 // AddURL adds a new URL to the queue
 func (q *Queue) AddURL(URL string) error {
 	u, err := url.Parse(URL)

@@ -2,16 +2,17 @@ package main
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/gocolly/colly"
-	"github.com/gocolly/colly/queue"
 	"github.com/gorilla/websocket"
-	internalq "github.com/joja5627/scraper/internal/queue"
 	"github.com/joja5627/scraper/internal/scrape"
 	"google.golang.org/api/gmail/v1"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 var (
@@ -82,21 +83,52 @@ func buildEmail(email string, url string) gmail.Message {
 //"https://sandiego.craigslist.org/contactinfo/sdo/sof/6955927244
 
 func main() {
-	q, _ := internalq.New(
-		2, // Number of consumer threads
-		&queue.InMemoryQueueStorage{MaxSize: 10000},
-	)
-	c := scrape.BuildCollector(q)
+
+	c := scrape.BuildCollector()
 
 	for _, state := range stateCodes {
 		stateOrg := fmt.Sprintf("https://%s.craigslist.org", state)
-		q.AddURL(fmt.Sprintf("%s/d/software-qa-dba-etc/search/sof", stateOrg))
-		q.AddURL(fmt.Sprintf("%s/search/sof?employment_type=3", stateOrg))
+		time.Sleep(10 * time.Millisecond)
+		c.Visit(fmt.Sprintf("%s/d/software-qa-dba-etc/search/sof", stateOrg))
+		time.Sleep(10 * time.Millisecond)
+		c.Visit(fmt.Sprintf("%s/search/sof?employment_type=3", stateOrg))
+	}
+	c.Wait()
+	contactInfos := scrape.GetContactInfos()
+	for _, contactURL := range contactInfos {
+		infoRESP, err := http.Get(contactURL)
 
 	}
+	htmlData, err := ioutil.ReadAll(infoRESP.Body)
+	if err != nil {
+		jsonListing, _ := json.Marshal(listing)
+		body := map[string]string{"status": fmt.Sprintf("%d", http.StatusBadRequest),
+			"statusText": http.StatusText(http.StatusBadRequest),
+			"body":       string(jsonListing)}
+		c.JSON(http.StatusBadRequest, body)
+		return
+	}
 
-	q.Run(c)
-	c.Wait()
+	if htmlData == nil {
+		jsonListing, _ := json.Marshal(listing)
+		body := map[string]string{"status": fmt.Sprintf("%d", http.StatusBadRequest),
+			"statusText": http.StatusText(http.StatusBadRequest),
+			"body":       string(jsonListing)}
+		c.JSON(http.StatusBadRequest, body)
+		return
+	}
+
+	//listingMAP := scrape.GetListingMap()
+	//for k, _ := range listingMAP.Keys() {
+	//
+	//}
+	//for key,val := range {
+	//	fmt.Println("%s",key)
+	//	for link := range val {
+	//		fmt.Println("  %s",link)
+	//	}
+	//
+	//}
 
 }
 
@@ -151,7 +183,19 @@ func main() {
 //
 //	listing.ContactInfoUrl = contactInfo
 //	r, _ := regexp.Compile(":([a-zA-Z0-9])+@job.craigslist.org")
-//	infoRESP, err := http.Get(listing.ContactInfoUrl)
+
+//
+//
+//	if err != nil {
+//		jsonListing, _ := json.Marshal(listing)
+//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
+//			"statusText":http.StatusText(http.StatusBadRequest),
+//			"body": string(jsonListing)}
+//		c.JSON(http.StatusBadRequest,body)
+//		return
+//	}
+//
+//
 //	if infoRESP == nil {
 //		jsonListing, _ := json.Marshal(listing)
 //		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
@@ -160,35 +204,7 @@ func main() {
 //		c.JSON(http.StatusBadRequest,body)
 //		return
 //	}
-//
-//
-//	if err != nil {
-//		jsonListing, _ := json.Marshal(listing)
-//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
-//			"statusText":http.StatusText(http.StatusBadRequest),
-//			"body": string(jsonListing)}
-//		c.JSON(http.StatusBadRequest,body)
-//		return
-//	}
-//
-//	htmlData, err := ioutil.ReadAll(infoRESP.Body)
-//	if err != nil {
-//		jsonListing, _ := json.Marshal(listing)
-//		body := map[string]string{"status":fmt.Sprintf("%d",http.StatusBadRequest),
-//			"statusText":http.StatusText(http.StatusBadRequest),
-//			"body": string(jsonListing)}
-//		c.JSON(http.StatusBadRequest,body)
-//		return
-//	}
-//
-//	if htmlData == nil {
-//		jsonListing, _ := json.Marshal(listing)
-//		body := map[string]string{"status": fmt.Sprintf("%d",http.StatusBadRequest),
-//			"statusText":http.StatusText(http.StatusBadRequest),
-//			"body": string(jsonListing)}
-//		c.JSON(http.StatusBadRequest,body)
-//		return
-//	}
+
 //
 //
 //	if err != nil {
